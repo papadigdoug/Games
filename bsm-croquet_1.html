@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Blood Sweat Monkeys Croquet: The Greatest Shot Ever</title>
+<style>
+  :root{
+    --bsm-green:#2e6b2e;
+    --bsm-yellow:#ffd23f;
+    --bsm-red:#c8352c;
+    --bsm-purple:#5b2a86;
+  }
+  html,body{
+    margin:0; padding:0; height:100%; overflow:hidden;
+    background:#0d1608;
+    font-family:'Trebuchet MS', 'Comic Sans MS', sans-serif;
+    user-select:none;
+  }
+  #gameWrap{
+    position:relative;
+    width:100vw; height:100vh;
+    display:flex; align-items:center; justify-content:center;
+  }
+  canvas{
+    background:#8fd0ff;
+    display:block;
+    image-rendering: optimizeSpeed;
+    box-shadow: 0 0 60px rgba(0,0,0,0.6);
+    max-width:100vw;
+    max-height:100vh;
+  }
+  .overlay{
+    position:absolute; top:0; left:0; right:0; bottom:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    color:#fff; text-align:center;
+    background:radial-gradient(ellipse at center, rgba(20,40,10,0.75) 0%, rgba(5,10,3,0.95) 100%);
+    padding:20px; box-sizing:border-box;
+  }
+  .hidden{ display:none !important; }
+  h1.title{
+    font-size:2.6em; margin:0 0 6px 0; color:var(--bsm-yellow);
+    text-shadow: 3px 3px 0 var(--bsm-red), 6px 6px 0 rgba(0,0,0,0.5);
+    letter-spacing:1px;
+  }
+  h2.subtitle{
+    margin:0 0 20px 0; color:#e8f5d0; font-weight:normal; font-style:italic;
+  }
+  .btn{
+    font-family:inherit;
+    font-size:1.1em;
+    padding:12px 26px;
+    margin:8px;
+    border:3px solid #2b1a06;
+    border-radius:10px;
+    background:linear-gradient(#ffe27a, #ffb703);
+    color:#3a2400;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 5px 0 #a35d00, 0 8px 10px rgba(0,0,0,0.4);
+    transition:transform 0.06s;
+  }
+  .btn:active{ transform:translateY(4px); box-shadow:0 1px 0 #a35d00; }
+  .btn.alt{ background:linear-gradient(#9fe37c,#4fae2f); box-shadow:0 5px 0 #2e6b16,0 8px 10px rgba(0,0,0,0.4);}
+  .charRow{ display:flex; gap:18px; flex-wrap:wrap; justify-content:center; margin-bottom:10px;}
+  .charCard{
+    width:180px; background:rgba(255,255,255,0.08); border:2px solid #ffd23f;
+    border-radius:12px; padding:14px; cursor:pointer; transition:0.15s;
+  }
+  .charCard:hover{ background:rgba(255,210,63,0.25); transform:scale(1.04); }
+  .charCard.selected{ background:rgba(255,210,63,0.4); border-color:#fff; }
+  .charCard h3{ margin:6px 0; color:#ffd23f; }
+  .charCard p{ font-size:0.82em; color:#ddd; margin:4px 0;}
+  .avatarPreview{ display:block; margin:0 auto; }
+  .statBar{ height:8px; background:#333; border-radius:4px; overflow:hidden; margin:3px 0;}
+  .statFill{ height:100%; background:#4fd6ff;}
+  #hud{
+    position:absolute; top:0; left:0; right:0;
+    display:flex; justify-content:space-between; padding:10px 16px;
+    box-sizing:border-box; color:#fff; font-weight:bold; pointer-events:none;
+    text-shadow:2px 2px 2px rgba(0,0,0,0.8); font-size:1.05em;
+  }
+  #hud .box{ background:rgba(0,0,0,0.35); border-radius:8px; padding:6px 12px; }
+  #comboWrap{ text-align:center; }
+  #powerupHud{
+    position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+    color:#fff; font-weight:bold; text-shadow:2px 2px 2px #000;
+    background:rgba(0,0,0,0.4); padding:6px 14px; border-radius:8px;
+  }
+  #aimHint{
+    position:absolute; bottom:16px; left:50%; transform:translateX(-50%);
+    color:#fff; background:rgba(0,0,0,0.45); padding:8px 18px; border-radius:20px;
+    font-size:0.95em; text-shadow:1px 1px 2px #000;
+  }
+  .flash{
+    position:absolute; top:38%; left:50%; transform:translate(-50%,-50%);
+    font-size:2em; font-weight:bold; color:#fff700; text-shadow:3px 3px 0 #b00, 0 0 20px #fff;
+    pointer-events:none; opacity:0; transition:opacity 0.15s;
+  }
+  #gnomeCount, #maxCombo{color:#ffd23f;}
+  .footNote{ font-size:0.7em; color:#aaa; margin-top:16px; max-width:500px;}
+  #muteBtn{
+    position:absolute; top:10px; right:10px; z-index:5;
+    width:38px; height:38px; border-radius:50%; border:2px solid #ffd23f;
+    background:rgba(0,0,0,0.45); color:#fff; font-size:1.1em; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #invSlots{
+    position:absolute; bottom:16px; right:16px; z-index:5;
+    display:flex; gap:10px;
+  }
+  .invSlot{
+    width:56px; height:56px; border-radius:12px; border:3px solid #ffd23f;
+    background:rgba(0,0,0,0.5); color:#fff; font-family:inherit; font-weight:bold;
+    font-size:0.85em; cursor:pointer; opacity:0.4;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    box-shadow:0 4px 0 rgba(0,0,0,0.4);
+    transition:transform 0.08s, opacity 0.15s;
+  }
+  .invSlot:not(:disabled){ opacity:1; }
+  .invSlot:not(:disabled):active{ transform:translateY(3px); }
+  .invSlot:disabled{ cursor:default; }
+</style>
+</head>
+<body>
+<div id="gameWrap">
+  <canvas id="game" width="960" height="540"></canvas>
+
+  <!-- START SCREEN -->
+  <div id="startScreen" class="overlay">
+    <h1 class="title">🩸 BLOOD SWEAT MONKEYS 🐒</h1>
+    <h2 class="subtitle">CROQUET: The Greatest Shot Ever</h2>
+    <p style="max-width:520px;color:#e8f5d0;">Line up the shot. Send the ball screaming across the cursed backyard.
+    Thread the wickets, dodge the Belvadeer gnomes, and ride the chaos as far as it'll take you.</p>
+    <p style="max-width:520px;color:#bcd8a8;font-size:0.9em;">Power-ups go into your inventory when you grab them — hold up to 3 at once.
+    Press <b>1</b>, <b>2</b>, or <b>3</b> (or tap the slot buttons) to use them whenever you need them most.
+    Save a 🚀 Rocket Relish for the flat final level — it's the only boost that works without a bounce.</p>
+    <button class="btn" id="startBtn">START THE LEGEND</button>
+    <p class="footNote">Placeholder art mode — swap in real BSM sprites any time via the SPRITES registry in the source.</p>
+  </div>
+
+  <!-- CHARACTER SELECT -->
+  <div id="charScreen" class="overlay hidden">
+    <h1 class="title" style="font-size:1.8em;">CHOOSE YOUR CHAMPION</h1>
+    <div class="charRow" id="charRow"></div>
+    <button class="btn alt" id="confirmCharBtn" disabled>TAKE THE SHOT</button>
+  </div>
+
+  <!-- GAME OVER -->
+  <div id="overScreen" class="overlay hidden">
+    <h1 class="title" id="overTitle">RUN OVER</h1>
+    <h2 class="subtitle" id="overReason">The gnomes win this time.</h2>
+    <div style="background:rgba(0,0,0,0.35); border-radius:12px; padding:16px 26px; margin-bottom:16px;">
+      <p>Distance: <b id="statDistance">0</b> yards</p>
+      <p>Final Score: <b id="statScore">0</b></p>
+      <p>Wickets threaded: <b id="statWickets">0</b> &nbsp;|&nbsp; Best combo: <b id="statCombo">x1</b></p>
+      <p>Belvadeers smashed: <b id="statSmashed">0</b></p>
+      <p>Session Best: <b id="statBest">0</b></p>
+    </div>
+    <button class="btn" id="restartBtn">SHOOT AGAIN</button>
+    <button class="btn alt" id="menuBtn">CHANGE CHAMPION</button>
+  </div>
+
+  <!-- HUD (during aim + flight) -->
+  <div id="hud" class="hidden">
+    <div class="box">Score: <span id="hudScore">0</span></div>
+    <div class="box" id="comboWrap">Combo: <span id="hudCombo">x1</span></div>
+    <div class="box">Distance: <span id="hudDistance">0</span> yd</div>
+    <div class="box">Wickets: <span id="hudWickets">0</span> &nbsp;Smashed: <span id="hudSmashed">0</span></div>
+    <div class="box">Lives: <span id="hudLives">0</span></div>
+  </div>
+  <div id="powerupHud" class="hidden"></div>
+  <div id="invSlots" class="hidden">
+    <button class="invSlot" id="invSlot0" data-slot="0" title="Use power-up 1 (key: 1)" disabled>1</button>
+    <button class="invSlot" id="invSlot1" data-slot="1" title="Use power-up 2 (key: 2)" disabled>2</button>
+    <button class="invSlot" id="invSlot2" data-slot="2" title="Use power-up 3 (key: 3)" disabled>3</button>
+  </div>
+  <div id="aimHint" class="hidden"></div>
+  <div class="flash" id="flashText"></div>
+  <button id="muteBtn" title="Mute sound">🔊</button>
+</div>
+
+<script>
+/* =========================================================================
+   BLOOD SWEAT MONKEYS CROQUET — game source
+   -------------------------------------------------------------------------
+   ART / SPRITE REPLACEMENT GUIDE:
+   Every visual entity is drawn through the SPRITES registry below. To swap
+   in real BSM artwork, just do, anywhere after this file loads:
+
+       SPRITES.gnome.image = new Image();
+       SPRITES.gnome.image.src = "art/gnome.png";
+
+   Once an Image is loaded (.complete === true) it is drawn automatically
+   instead of the placeholder vector art. No other code needs to change.
+   ========================================================================= */
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+// ---------- RESIZE ----------
+function fitCanvas(){
+  const targetRatio = 960/540;
+  let w = window.innerWidth, h = window.innerHeight;
+  if (w/h > targetRatio){ w = h*targetRatio; } else { h = w/targetRatio; }
+  canvas.style.width = w+"px";
+  canvas.style.height = h+"px";
+}
+window.addEventListener('resize', fitCanvas);
+fitCanvas();
+
+// ---------- SOUND FX ----------
+// All sound is synthesized live via the Web Audio API — no external audio
+// files to load or replace. To swap in real recorded SFX later, just have
+// each SFX.xxx() method play an <audio> element instead of synthesizing.
+const SFX = (function(){
+  let ctx = null;
+  let muted = false;
+
+  function ensureCtx(){
+    if (!ctx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) ctx = new AC();
+    }
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+
+  function tone(freq, dur, opts={}){
+    const c = ensureCtx(); if (!c || muted) return;
+    const { type='sine', vol=0.25, attack=0.005, decay=dur, glideTo=null, delay=0 } = opts;
+    const t0 = c.currentTime + delay;
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(Math.max(1,freq), t0);
+    if (glideTo) osc.frequency.exponentialRampToValueAtTime(Math.max(1,glideTo), t0+decay);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.001,vol), t0+attack);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0+decay);
+    osc.connect(gain); gain.connect(c.destination);
+    osc.start(t0); osc.stop(t0+decay+0.03);
+  }
+
+  function noise(dur, opts={}){
+    const c = ensureCtx(); if (!c || muted) return;
+    const { vol=0.3, filterFreq=1500, filterType='bandpass', delay=0, decay=dur } = opts;
+    const t0 = c.currentTime + delay;
+    const bufferSize = Math.max(1, Math.floor(c.sampleRate*dur));
+    const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i=0;i<bufferSize;i++){ data[i] = Math.random()*2-1; }
+    const src = c.createBufferSource();
+    src.buffer = buffer;
+    const filter = c.createBiquadFilter();
+    filter.type = filterType; filter.frequency.value = filterFreq;
+    const gain = c.createGain();
+    gain.gain.setValueAtTime(vol, t0);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0+decay);
+    src.connect(filter); filter.connect(gain); gain.connect(c.destination);
+    src.start(t0); src.stop(t0+decay+0.03);
+  }
+
+  return {
+    unlock(){ ensureCtx(); },
+    setMuted(m){ muted = m; },
+    isMuted(){ return muted; },
+
+    hit(){ // mallet-to-ball contact — punchy thwack
+      noise(0.06, {vol:0.35, filterFreq:900, filterType:'lowpass', decay:0.07});
+      tone(140, 0.12, {type:'triangle', vol:0.3, decay:0.12, glideTo:70});
+    },
+    wicket(combo){ // bright ascending ding — rises in pitch with combo
+      const base = 660 + Math.min(combo,8)*40;
+      tone(base, 0.11, {type:'sine', vol:0.22, decay:0.1});
+      tone(base*1.5, 0.14, {type:'sine', vol:0.18, decay:0.13, delay:0.06});
+    },
+    treeSmash(){ // wood crunch
+      noise(0.16, {vol:0.35, filterFreq:1200, filterType:'bandpass', decay:0.16});
+      tone(90, 0.12, {type:'sawtooth', vol:0.18, decay:0.12, glideTo:40});
+    },
+    treeBlock(){ // dull thud — bounced off, no smash
+      noise(0.12, {vol:0.28, filterFreq:400, filterType:'lowpass', decay:0.12});
+      tone(80, 0.16, {type:'sine', vol:0.22, decay:0.16, glideTo:50});
+    },
+    gnomeSmash(){ // ceramic shatter crack immediately followed by a panicked scream
+      noise(0.05, {vol:0.4, filterFreq:2600, filterType:'highpass', decay:0.05});
+      noise(0.22, {vol:0.32, filterFreq:3400, filterType:'highpass', decay:0.22, delay:0.02});
+      noise(0.16, {vol:0.25, filterFreq:1600, filterType:'bandpass', decay:0.16, delay:0.03});
+      // wobbling, jittery descending scream
+      const scream = [780, 560, 700, 460, 340, 260];
+      scream.forEach((f,i)=>{
+        tone(f, 0.1, {type:'sawtooth', vol:0.24, decay:0.1, delay:0.05+i*0.055, glideTo:f*0.72});
+      });
+      noise(0.3, {vol:0.14, filterFreq:2000, filterType:'bandpass', decay:0.3, delay:0.07});
+    },
+    grabbed(){ // descending failure womp
+      tone(300, 0.28, {type:'sawtooth', vol:0.25, decay:0.28, glideTo:70});
+    },
+    gnomeCackle(){ // deep, maniacal laugh when a gnome catches the ball
+      const notes = [150, 115, 160, 105, 175, 95];
+      notes.forEach((f,i)=>{
+        tone(f, 0.15, {type:'sawtooth', vol:0.24, decay:0.15, delay:i*0.13, glideTo:f*0.65});
+      });
+      tone(65, 0.55, {type:'sawtooth', vol:0.22, decay:0.55, glideTo:35, delay:notes.length*0.13});
+    },
+    powerup(kind){ // rising sparkle arpeggio, tinted per power type — plays on ACTIVATION
+      const tints = { powerupMulch:1.0, powerupRepellent:1.15, powerupBounce:1.3, powerupFuego:0.9 };
+      const mult = tints[kind]||1;
+      [523,659,784].forEach((f,i)=>tone(f*mult, 0.12, {type:'triangle', vol:0.2, decay:0.12, delay:i*0.05}));
+    },
+    pickup(){ // light neutral chime — plays when a power-up is stored, not used
+      tone(700, 0.08, {type:'sine', vol:0.16, decay:0.08});
+      tone(900, 0.1, {type:'sine', vol:0.14, decay:0.1, delay:0.05});
+    },
+    boost(){ // boingy pitch-bend — ancient tree / monstrocity bounce
+      tone(180, 0.28, {type:'sine', vol:0.3, decay:0.28, glideTo:640});
+    },
+    ultraBoost(){ // a much bigger, layered version of boost() for the ground pads
+      tone(140, 0.34, {type:'sine', vol:0.32, decay:0.34, glideTo:820});
+      tone(210, 0.3, {type:'sawtooth', vol:0.2, decay:0.3, glideTo:900, delay:0.03});
+      noise(0.15, {vol:0.22, filterFreq:2600, filterType:'highpass', decay:0.15, delay:0.02});
+    },
+    freed(){ // quick upward blip
+      tone(400, 0.1, {type:'square', vol:0.2, decay:0.1, glideTo:700});
+    },
+    gameOver(){ // sad descending tone
+      tone(300, 0.5, {type:'triangle', vol:0.22, decay:0.5, glideTo:90});
+    },
+    fanfare(){ // triumphant ascending run — new high score
+      [523,659,784,1046].forEach((f,i)=>tone(f,0.18,{type:'triangle', vol:0.25, decay:0.18, delay:i*0.09}));
+    },
+    checkpoint(){ // classic "extra life" style jingle
+      [392,523,659,880].forEach((f,i)=>tone(f,0.13,{type:'square', vol:0.18, decay:0.13, delay:i*0.06}));
+    },
+    zoneChange(){ // short mysterious two-note motif when scenery shifts
+      tone(220, 0.22, {type:'sine', vol:0.16, decay:0.22, glideTo:330});
+      tone(165, 0.3, {type:'sine', vol:0.12, decay:0.3, delay:0.12});
+    }
+  };
+})();
+
+// ---------- CONFIG ----------
+const CFG = {
+  GRAVITY: 1000,           // px/s^2
+  GROUND_RESTITUTION: 0.5, // vertical bounce energy retained
+  GROUND_FRICTION: 0.9,    // one-time horizontal loss on a real bounce impact
+  ROLL_FRICTION_PER_SEC: 0.5, // fraction of horizontal speed kept per second while rolling
+  BOUNCE_MIN_SPEED: 70,    // vy above this = a real bounce; below = rolling contact
+  AIR_DRAG: 0.999,
+  BALL_RADIUS: 12,
+  START_X: 120,
+  POWER_SCALE: 15,         // multiplier from 0-100 power to launch speed
+  MIN_STOP_SPEED: 40,
+  POWERUP_DURATION: 5.0,
+  CAMERA_LERP: 0.14,
+  CAMERA_LERP_AIM: 0.22,
+  CAM_X_BIAS: 0.36,      // where the ball sits horizontally on screen (0-1)
+  CAM_Y_BIAS: 0.48,      // where the ball sits vertically on screen (0-1)
+  AIM_ZOOM: 2.2,         // close-up on ball+mallet while aiming
+  HIT_ZOOM: 2.5,         // tightest zoom for the moment of contact
+  FLIGHT_ZOOM_MIN: 1.1,  // zoomed out for fast/far shots
+  FLIGHT_ZOOM_MAX: 2.0,  // zoomed in for slow/close moments
+  FLIGHT_ZOOM_ABS_MIN: 0.4, // absolute floor so a very high shot doesn't zoom out infinitely
+  ZOOM_LERP: 0.07,
+  HIT_DURATION: 0.38,        // seconds for the mallet swing animation
+  HIT_CONTACT_FRACTION: 0.62, // % through swing where mallet meets ball
+  GNOME_CATCH_SPEED: 260,     // below this speed, a normal gnome can grab the ball
+  GNOME_CATCH_SPEED_HARD: 380,// tough gnomes need more speed to smash through
+  WICKET_BOOST_MULT: 1.32,    // speed multiplier applied on every wicket pass
+  WICKET_BOOST_FLAT: 140,     // flat speed kick, so even a slow roller gets sent again
+  WICKET_BOOST_PER_COMBO: 20, // extra flat speed per combo step, so streaks snowball harder
+  MAX_BALL_SPEED: 2900,       // cap so combo boosts don't run away forever
+  ULTRA_BOOST_MULT: 2.0,      // ground-pad "ultra boost" — much bigger than a wicket kick
+  ULTRA_BOOST_FLAT: 320,
+  ULTRA_PAD_MIN_GAP: 1100,    // pads are rare — spaced well apart along the course
+  ULTRA_PAD_MAX_GAP: 1900,
+  WICKETS_PER_LIFE: 5,        // every N wickets grants an extra life + checkpoint
+  MAX_EXTRA_LIVES: 4,
+  PX_PER_YARD: 9,
+  YARDS_PER_LEVEL: 1000,      // course length per level
+  TOTAL_LEVELS: 5,            // 5000 yards total
+  STAKE_YARDS_PAST_WICKET: 100, // the wooden finish stake sits this far beyond the golden wicket
+  SLOWMO_SCALE: 0.18,         // game speed during a gnome-smash hit-stop
+  SLOWMO_DURATION: 0.55       // real seconds the hit-stop lasts
+};
+
+// Derived course positions — computed once from the yard-based settings
+// above so the level boundaries, flat final stretch, golden wicket, and
+// wooden stake all stay in exact agreement with each other.
+CFG.FLAT_LEVEL_START_X = CFG.START_X + CFG.YARDS_PER_LEVEL*(CFG.TOTAL_LEVELS-1)*CFG.PX_PER_YARD; // start of the final (flat) level
+CFG.FINISH_WICKET_X    = CFG.START_X + CFG.YARDS_PER_LEVEL*CFG.TOTAL_LEVELS*CFG.PX_PER_YARD;      // golden wicket, at exactly 5000 yards
+CFG.STAKE_X             = CFG.FINISH_WICKET_X + CFG.STAKE_YARDS_PAST_WICKET*CFG.PX_PER_YARD;      // wooden stake, 100 yards past the wicket
+CFG.WORLD_LENGTH        = CFG.STAKE_X + 300; // small buffer past the stake for camera/safety margin
+CFG.FINAL_STRAIGHT_PX   = CFG.WORLD_LENGTH - CFG.FLAT_LEVEL_START_X;
+
+// ---------- SPRITE REGISTRY (placeholder vector art) ----------
+const SPRITES = {
+  ball: { image:null, draw(ctx,x,y,s){
+    ctx.save(); ctx.translate(x,y);
+    // shaded sphere base (light from upper-left) for a bit of 3D volume
+    const grad = ctx.createRadialGradient(-s*0.35,-s*0.35,s*0.1, 0,0,s*1.05);
+    grad.addColorStop(0,"#ffffff");
+    grad.addColorStop(0.55,"#f4efe4");
+    grad.addColorStop(1,"#d6cdb8");
+    ctx.beginPath(); ctx.arc(0,0,s,0,Math.PI*2); ctx.fillStyle=grad; ctx.fill();
+    // red croquet bands
+    ctx.strokeStyle="#c8352c"; ctx.lineWidth=s*0.26;
+    ctx.beginPath(); ctx.arc(0,0,s*0.68,0.2,Math.PI*0.9); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,s*0.68,Math.PI*1.1,Math.PI*1.85); ctx.stroke();
+    // thin darker seam lines flanking the bands, like carved wood rings
+    ctx.strokeStyle="rgba(90,25,18,0.45)"; ctx.lineWidth=Math.max(0.6,s*0.035);
+    ctx.beginPath(); ctx.arc(0,0,s*0.68+s*0.16,0.2,Math.PI*0.9); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,s*0.68-s*0.16,0.2,Math.PI*0.9); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,s*0.68+s*0.16,Math.PI*1.1,Math.PI*1.85); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,s*0.68-s*0.16,Math.PI*1.1,Math.PI*1.85); ctx.stroke();
+    // outline for edge definition
+    ctx.strokeStyle="rgba(60,40,20,0.4)"; ctx.lineWidth=Math.max(0.6,s*0.045);
+    ctx.beginPath(); ctx.arc(0,0,s*0.99,0,Math.PI*2); ctx.stroke();
+    // specular highlight
+    ctx.save(); ctx.rotate(-0.6);
+    ctx.beginPath(); ctx.ellipse(-s*0.36,-s*0.32,s*0.24,s*0.14,0,0,Math.PI*2);
+    ctx.fillStyle="rgba(255,255,255,0.85)"; ctx.fill();
+    ctx.restore();
+    ctx.restore();
+  }},
+  gnome: { image:null, draw(ctx,x,y,s){
+    ctx.save(); ctx.translate(x,y);
+    ctx.fillStyle="#3a1f0a"; ctx.beginPath(); ctx.ellipse(0,s*0.55,s*0.9,s*0.35,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#5b3a1e"; ctx.fillRect(-s*0.5,-s*0.1,s,s*0.7);
+    ctx.fillStyle="#e8c39e"; ctx.beginPath(); ctx.arc(0,-s*0.35,s*0.45,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#c8352c"; ctx.beginPath();
+    ctx.moveTo(-s*0.55,-s*0.55); ctx.lineTo(s*0.55,-s*0.55); ctx.lineTo(0,-s*1.5); ctx.fill();
+    ctx.fillStyle="#000"; ctx.beginPath(); ctx.arc(-s*0.18,-s*0.35,s*0.07,0,Math.PI*2); ctx.arc(s*0.18,-s*0.35,s*0.07,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#000"; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,-s*0.18,s*0.15,0,Math.PI); ctx.stroke();
+    ctx.restore();
+  }},
+  gnomeHard: { image:null, draw(ctx,x,y,s){
+    SPRITES.gnome.draw(ctx,x,y,s*1.15);
+    ctx.save(); ctx.translate(x,y);
+    ctx.strokeStyle="#7a1fae"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(0,-s*0.1,s*1.3,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }},
+  antiBoost: { image:null, draw(ctx,x,y,s){
+    // a withered, thorny hazard bush — saps speed but never ends the run outright
+    ctx.save(); ctx.translate(x,y);
+    ctx.fillStyle="#5a4a3a"; ctx.fillRect(-s*0.14,-s*0.15,s*0.28,s*0.9);
+    ctx.fillStyle="#6b5a4a"; ctx.beginPath(); ctx.arc(0,-s*0.75,s*0.85,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#8a7a5a"; ctx.beginPath(); ctx.arc(-s*0.3,-s*0.95,s*0.5,0,Math.PI*2); ctx.fill();
+    // thorny spikes
+    ctx.strokeStyle="#3a2a1a"; ctx.lineWidth=s*0.06; ctx.lineCap="round";
+    for (let i=0;i<6;i++){
+      const ang = (i/6)*Math.PI*2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(ang)*s*0.6, -s*0.75+Math.sin(ang)*s*0.6);
+      ctx.lineTo(Math.cos(ang)*s*0.95, -s*0.75+Math.sin(ang)*s*0.95);
+      ctx.stroke();
+    }
+    // downward "anti-boost" chevron badge
+    ctx.fillStyle="#c8352c"; ctx.globalAlpha=0.85;
+    ctx.beginPath();
+    ctx.moveTo(-s*0.22,-s*1.15); ctx.lineTo(s*0.22,-s*1.15); ctx.lineTo(0,-s*0.82);
+    ctx.fill();
+    ctx.restore();
+  }},
+  treeAncient: { image:null, draw(ctx,x,y,s){
+    ctx.save(); ctx.translate(x,y);
+    ctx.fillStyle="#4a2f18"; ctx.fillRect(-s*0.3,-s*0.2,s*0.6,s*1.6);
+    ctx.fillStyle="#ffd23f"; ctx.beginPath(); ctx.arc(0,-s*1.3,s*1.3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#ffb703"; ctx.beginPath(); ctx.arc(s*0.4,-s*1.6,s*0.7,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#fff"; ctx.lineWidth=2; ctx.globalAlpha=0.7;
+    ctx.beginPath(); ctx.arc(0,-s*1.3,s*1.5,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }},
+  wicket: { image:null, draw(ctx,x,y,s){
+    ctx.save(); ctx.translate(x,y);
+    ctx.strokeStyle="#e8e8e8"; ctx.lineWidth=s*0.16; ctx.lineCap="round";
+    ctx.beginPath(); ctx.arc(0,0,s,Math.PI,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }},
+  goldenWicket: { image:null, draw(ctx,x,y,s){
+    ctx.save(); ctx.translate(x,y);
+    ctx.shadowColor="#ffd23f"; ctx.shadowBlur=s*0.6;
+    const grad = ctx.createLinearGradient(-s,0,s,0);
+    grad.addColorStop(0,"#fff2b0"); grad.addColorStop(0.5,"#ffd23f"); grad.addColorStop(1,"#c98a0a");
+    ctx.strokeStyle=grad; ctx.lineWidth=s*0.22; ctx.lineCap="round";
+    ctx.beginPath(); ctx.arc(0,0,s,Math.PI,Math.PI*2); ctx.stroke();
+    ctx.shadowBlur=0;
+    ctx.fillStyle="#fff8dd"; ctx.font=`bold ${s*0.5}px sans-serif`; ctx.textAlign="center";
+    ctx.fillText("★", 0, -s*0.5);
+    ctx.restore();
+  }},
+  finishStake: { image:null, draw(ctx,x,y,s){
+    ctx.save(); ctx.translate(x,y);
+    // ground shadow
+    ctx.fillStyle="rgba(0,0,0,0.18)"; ctx.beginPath(); ctx.ellipse(0,3,s*0.55,s*0.16,0,0,Math.PI*2); ctx.fill();
+    // subtle golden glow behind the post — it's the finish marker
+    ctx.save();
+    ctx.shadowColor="#ffd23f"; ctx.shadowBlur=s*0.7;
+    ctx.strokeStyle="rgba(255,210,63,0.5)"; ctx.lineWidth=s*0.05;
+    ctx.beginPath(); ctx.moveTo(0,-s*2.3); ctx.lineTo(0,s*0.05); ctx.stroke();
+    ctx.restore();
+    // wooden post, shaded left-to-right for a rounded look
+    const postGrad = ctx.createLinearGradient(-s*0.16,0,s*0.16,0);
+    postGrad.addColorStop(0,"#8a5a2a"); postGrad.addColorStop(0.5,"#6b4423"); postGrad.addColorStop(1,"#4a2f18");
+    ctx.fillStyle=postGrad;
+    ctx.fillRect(-s*0.16, -s*2.15, s*0.32, s*2.2);
+    // classic croquet-peg painted bands
+    ctx.fillStyle="#c8352c"; ctx.fillRect(-s*0.17,-s*1.85,s*0.34,s*0.2);
+    ctx.fillStyle="#4fd6ff"; ctx.fillRect(-s*0.17,-s*1.5,s*0.34,s*0.2);
+    ctx.fillStyle="#4fae2f"; ctx.fillRect(-s*0.17,-s*1.15,s*0.34,s*0.2);
+    ctx.fillStyle="#ffd23f"; ctx.fillRect(-s*0.17,-s*0.8,s*0.34,s*0.2);
+    // rounded cap on top
+    ctx.fillStyle="#4a2f18"; ctx.beginPath(); ctx.arc(0,-s*2.15,s*0.18,0,Math.PI*2); ctx.fill();
+    // small golden pennant fluttering off the top
+    ctx.fillStyle="#ffd23f";
+    ctx.beginPath();
+    ctx.moveTo(s*0.12,-s*2.1);
+    ctx.lineTo(s*0.78,-s*1.95);
+    ctx.lineTo(s*0.12,-s*1.7);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle="#c98a0a"; ctx.lineWidth=1; ctx.stroke();
+    ctx.restore();
+  }},
+  powerupMulch: { image:null, color:"#8a5a2a", label:"🟤", draw(ctx,x,y,s){ drawPowerOrb(ctx,x,y,s,"#8a5a2a","M"); }},
+  powerupRepellent: { image:null, color:"#4fae2f", label:"🟢", draw(ctx,x,y,s){ drawPowerOrb(ctx,x,y,s,"#4fae2f","R"); }},
+  powerupBounce: { image:null, color:"#4fd6ff", label:"🔵", draw(ctx,x,y,s){ drawPowerOrb(ctx,x,y,s,"#4fd6ff","B"); }},
+  powerupFuego: { image:null, color:"#ff6a1a", label:"🔥", draw(ctx,x,y,s){ drawPowerOrb(ctx,x,y,s,"#ff6a1a","F"); }},
+  powerupSpeedBoost: { image:null, color:"#ff3d9e", label:"🚀", draw(ctx,x,y,s){ drawPowerOrb(ctx,x,y,s,"#ff3d9e","S"); }},
+
+  // ---- PLAYER AVATARS (placeholder art) ----
+  // s = a rough "half width" unit; figure stands with feet at (x, y).
+  avatarBrent: { image:null, draw(ctx,x,y,s){
+    ctx.save(); ctx.translate(x,y);
+    // legs
+    ctx.fillStyle="#2d4a6b"; ctx.fillRect(-s*0.5,-s*1.3,s*0.4,s*1.3); ctx.fillRect(s*0.1,-s*1.3,s*0.4,s*1.3);
+    // torso
+    ctx.fillStyle="#4fd6ff"; ctx.fillRect(-s*0.55,-s*2.5,s*1.1,s*1.3);
+    // arms
+    ctx.strokeStyle="#e8c39e"; ctx.lineWidth=s*0.22; ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(-s*0.5,-s*2.2); ctx.lineTo(-s*0.9,-s*1.7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(s*0.5,-s*2.2); ctx.lineTo(s*0.85,-s*1.6); ctx.stroke();
+    // head
+    ctx.fillStyle="#e8c39e"; ctx.beginPath(); ctx.arc(0,-s*2.9,s*0.55,0,Math.PI*2); ctx.fill();
+    // cap
+    ctx.fillStyle="#2d4a6b"; ctx.beginPath(); ctx.arc(0,-s*3.0,s*0.58,Math.PI,Math.PI*2); ctx.fill();
+    ctx.fillRect(-s*0.1,-s*3.0,s*0.75,s*0.18);
+    // face
+    ctx.fillStyle="#000"; ctx.beginPath(); ctx.arc(-s*0.15,-s*2.85,s*0.06,0,Math.PI*2); ctx.arc(s*0.15,-s*2.85,s*0.06,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#000"; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(0,-s*2.72,s*0.14,0.15,Math.PI-0.15); ctx.stroke();
+    ctx.restore();
+  }},
+  avatarJeff: { image:null, draw(ctx,x,y,s){
+    ctx.save(); ctx.translate(x,y);
+    // legs
+    ctx.fillStyle="#4a2f18"; ctx.fillRect(-s*0.55,-s*1.3,s*0.42,s*1.3); ctx.fillRect(s*0.13,-s*1.3,s*0.42,s*1.3);
+    // torso — broader, bigger build
+    ctx.fillStyle="#ff6a1a"; ctx.fillRect(-s*0.7,-s*2.6,s*1.4,s*1.4);
+    // arms (thicker)
+    ctx.strokeStyle="#e8c39e"; ctx.lineWidth=s*0.32; ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(-s*0.65,-s*2.3); ctx.lineTo(-s*1.05,-s*1.6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(s*0.65,-s*2.3); ctx.lineTo(s*1.05,-s*1.6); ctx.stroke();
+    // head
+    ctx.fillStyle="#e8c39e"; ctx.beginPath(); ctx.arc(0,-s*3.0,s*0.58,0,Math.PI*2); ctx.fill();
+    // mohawk
+    ctx.fillStyle="#ff6a1a";
+    ctx.beginPath();
+    ctx.moveTo(-s*0.08,-s*3.55); ctx.lineTo(s*0.08,-s*3.55);
+    ctx.lineTo(s*0.14,-s*3.0); ctx.lineTo(-s*0.14,-s*3.0);
+    ctx.fill();
+    // face — smirk
+    ctx.fillStyle="#000"; ctx.beginPath(); ctx.arc(-s*0.16,-s*2.95,s*0.06,0,Math.PI*2); ctx.arc(s*0.16,-s*2.95,s*0.06,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#000"; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(-s*0.14,-s*2.78); ctx.lineTo(s*0.18,-s*2.82); ctx.stroke();
+    ctx.restore();
+  }},
+  avatarRuss: { image:null, draw(ctx,x,y,s){
+    ctx.save(); ctx.translate(x,y);
+    // legs (mismatched socks for chaos)
+    ctx.fillStyle="#3a2a4a"; ctx.fillRect(-s*0.5,-s*1.3,s*0.4,s*1.3);
+    ctx.fillStyle="#c8352c"; ctx.fillRect(s*0.1,-s*1.3,s*0.4,s*1.3);
+    // torso
+    ctx.fillStyle="#c8352c"; ctx.fillRect(-s*0.55,-s*2.5,s*1.1,s*1.3);
+    // arms — wild angles
+    ctx.strokeStyle="#e8c39e"; ctx.lineWidth=s*0.22; ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(-s*0.5,-s*2.3); ctx.lineTo(-s*1.0,-s*2.5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(s*0.5,-s*2.3); ctx.lineTo(s*0.8,-s*1.5); ctx.stroke();
+    // head
+    ctx.fillStyle="#e8c39e"; ctx.beginPath(); ctx.arc(0,-s*2.9,s*0.55,0,Math.PI*2); ctx.fill();
+    // wild spiky hair
+    ctx.fillStyle="#5b2a86";
+    for (let i=-2;i<=2;i++){
+      ctx.beginPath();
+      ctx.moveTo(i*s*0.2, -s*3.35);
+      ctx.lineTo(i*s*0.2-s*0.08, -s*3.0);
+      ctx.lineTo(i*s*0.2+s*0.08, -s*3.0);
+      ctx.fill();
+    }
+    // face — wide-eyed chaotic grin
+    ctx.fillStyle="#000"; ctx.beginPath(); ctx.arc(-s*0.16,-s*2.85,s*0.08,0,Math.PI*2); ctx.arc(s*0.16,-s*2.85,s*0.08,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#000"; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(0,-s*2.7,s*0.16,0.1,Math.PI-0.1); ctx.stroke();
+    ctx.restore();
+  }},
+};
+function drawPowerOrb(ctx,x,y,s,color,letter){
+  ctx.save(); ctx.translate(x,y);
+  const grad = ctx.createRadialGradient(0,0,1,0,0,s);
+  grad.addColorStop(0,"#fff"); grad.addColorStop(0.4,color); grad.addColorStop(1,"rgba(255,255,255,0)");
+  ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(0,0,s,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle="#fff"; ctx.font=`bold ${s}px sans-serif`; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText(letter,0,1);
+  ctx.restore();
+}
+function drawSpriteOn(targetCtx, key, x, y, size, extra){
+  const sp = SPRITES[key];
+  if (!sp) return;
+  if (sp.image && sp.image.complete && sp.image.naturalWidth>0){
+    targetCtx.drawImage(sp.image, x-size, y-size, size*2, size*2);
+  } else {
+    sp.draw(targetCtx,x,y,size,extra);
+  }
+}
+function drawSprite(key, x, y, size){
+  drawSpriteOn(ctx, key, x, y, size);
+}
+
+// ---------- CHARACTERS ----------
+const CHARACTERS = {
+  brent: {
+    key:"brent", name:"Brent", color:"#4fd6ff",
+    tagline:"Balanced control and power. The reliable backyard legend.",
+    powerMult:1.0, angleVariance:0.02, powerVariance:0.03, scoreMult:1.0,
+    stats:{power:0.7, accuracy:0.95, chaos:0.2}
+  },
+  jeff: {
+    key:"jeff", name:"Jeff", color:"#ff6a1a",
+    tagline:"Swings for the fence every time. Power over precision.",
+    powerMult:1.22, angleVariance:0.06, powerVariance:0.05, scoreMult:1.05,
+    stats:{power:0.95, accuracy:0.6, chaos:0.45}
+  },
+  russ: {
+    key:"russ", name:"Russ", color:"#c8352c",
+    tagline:"Absolute chaos. Nobody — including Russ — knows what happens next.",
+    powerMult:1.05, angleVariance:0.16, powerVariance:0.18, scoreMult:1.35,
+    stats:{power:0.8, accuracy:0.35, chaos:0.95}
+  }
+};
+let selectedCharacter = null;
+
+// ---------- GAME STATE ----------
+const STATE = { START:'start', SELECT:'select', AIM_POWER:'aimPower', AIM_ANGLE:'aimAngle', HIT:'hit', FLIGHT:'flight', OVER:'over' };
+let gameState = STATE.START;
+let sessionHighScore = 0;
+
+let camX = 0;
+let camY = 0;
+let camZoom = 1.4;
+let shakeTimer = 0, shakeMag = 0;
+function screenShake(mag, dur){ shakeMag = mag; shakeTimer = dur; }
+let groundSeed = Math.random()*1000;
+const GROUND_BASE_Y = 380;
+function groundHeight(x){
+  // rolling backyard terrain everywhere except the final straight, where
+  // it eases flat — the last CFG.FINAL_STRAIGHT_PX of the course is a
+  // dead-flat runway with nothing to boost you, so reaching the golden
+  // wicket at the end is a pure test of speed carried over from earlier.
+  const flatStartX = CFG.WORLD_LENGTH - CFG.FINAL_STRAIGHT_PX;
+  if (x >= flatStartX) return GROUND_BASE_Y;
+  const transitionPx = 500;
+  const distToFlat = flatStartX - x;
+  const amp = distToFlat < transitionPx ? Math.max(0, distToFlat/transitionPx) : 1;
+  return 40*amp*Math.sin((x+groundSeed)*0.0025) + 14*amp*Math.sin((x+groundSeed)*0.008) + GROUND_BASE_Y;
+}
+
+// ---------- SCENERY ZONES ----------
+// The backdrop shifts as the ball travels further into the BSM universe.
+// Colors are [r,g,b] (or [r,g,b,a] for the parallax silhouettes) and blend
+// smoothly between zone stops based on progress through the course (0-1).
+const ZONES = [
+  { atYards:0,    name:"The Backyard",
+    sky:[[90,169,230],[159,216,255],[205,234,255]], ground:[[95,174,58],[46,107,46]],
+    silA:[70,50,90,0.35], silB:[50,90,50,0.3] },
+  { atYards:1000, name:"The Trailer Park Wilds",
+    sky:[[122,106,168],[183,155,214],[232,201,240]], ground:[[106,143,58],[53,92,30]],
+    silA:[90,60,110,0.4], silB:[60,80,40,0.32] },
+  { atYards:2000, name:"Gnome Territory",
+    sky:[[63,107,74],[111,166,120],[168,216,171]], ground:[[61,107,46],[31,61,21]],
+    silA:[30,60,30,0.5], silB:[20,40,20,0.4] },
+  { atYards:3000, name:"The Ancient Grove",
+    sky:[[46,140,120],[90,190,160],[150,225,200]], ground:[[40,110,70],[20,60,40]],
+    silA:[20,90,70,0.45], silB:[15,70,55,0.35] },
+  { atYards:4000, name:"The Golden Fields",
+    sky:[[255,179,71],[255,217,122],[255,242,201]], ground:[[201,154,46],[138,106,26]],
+    silA:[150,110,20,0.35], silB:[120,90,20,0.3] },
+];
+const ZONE_SPACING_YARDS = 1000; // a new level's scenery kicks in every this many yards
+function lerpRGB(a,b,t){
+  return [ a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t,
+    (a[3]!==undefined?a[3]:1) + (((b[3]!==undefined?b[3]:1)) - (a[3]!==undefined?a[3]:1))*t ];
+}
+function rgbStr(c){
+  return c.length>3 ? `rgba(${c[0]|0},${c[1]|0},${c[2]|0},${c[3]})` : `rgb(${c[0]|0},${c[1]|0},${c[2]|0})`;
+}
+function zoneIndexFor(distYards){
+  let idx = 0;
+  for (let i=0;i<ZONES.length;i++){ if (distYards >= ZONES[i].atYards) idx = i; }
+  return idx;
+}
+function getZoneBlend(distYards){
+  const idx = zoneIndexFor(distYards);
+  const cur = ZONES[idx];
+  const next = ZONES[idx+1];
+  if (!next) return { sky:cur.sky, ground:cur.ground, silA:cur.silA, silB:cur.silB };
+  const span = next.atYards - cur.atYards;
+  const t = span>0 ? Math.max(0,Math.min(1,(distYards-cur.atYards)/span)) : 0;
+  return {
+    sky: cur.sky.map((c,i)=>lerpRGB(c, next.sky[i], t)),
+    ground: cur.ground.map((c,i)=>lerpRGB(c, next.ground[i], t)),
+    silA: lerpRGB(cur.silA, next.silA, t),
+    silB: lerpRGB(cur.silB, next.silB, t),
+  };
+}
+
+// ---------- ENTITIES ----------
+let obstacles = []; // gnomes, trees
+let wickets = [];
+let powerups = [];
+let particles = [];
+let decorations = []; // non-collidable flourish
+let finishX = 0;
+let finishStake = null; // the actual finish trigger — ball must touch this
+let groundBoosts = []; // rare ground-embedded "ULTRA BOOST" pads
+
+function rand(a,b){ return a + Math.random()*(b-a); }
+function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function generateWorld(){
+  obstacles = []; wickets = []; powerups = []; decorations = []; groundBoosts = [];
+  const flatStartX = CFG.WORLD_LENGTH - CFG.FINAL_STRAIGHT_PX;
+  let x = 500;
+  let wicketId = 0;
+  while (x < flatStartX){
+    const progress = x / CFG.WORLD_LENGTH; // 0..1 difficulty ramp
+    const gap = rand(220,380) - progress*80;
+
+    // decide what goes here
+    const roll = Math.random();
+    const gY = groundHeight(x);
+
+    if (roll < 0.28){
+      // gnome
+      const hard = Math.random() < 0.25 + progress*0.3;
+      obstacles.push({type: hard?'gnomeHard':'gnome', x, y:gY-14, r: hard?20:16, alive:true});
+    } else if (roll < 0.46){
+      // tree cluster — no cursed traps; ancient boost trees are much more common now
+      const kind = Math.random() < 0.35 ? 'treeAncient' : 'antiBoost';
+      obstacles.push({type:kind, x, y:gY, r: kind==='treeAncient'?34:15, alive:true});
+    } else if (roll < 0.68){
+      // wicket
+      wickets.push({id:wicketId++, x, y:gY-30, w:14, h:60, passed:false});
+    } else if (roll < 0.90){
+      // powerup — Monstrocity Bounce weighted higher for more speed bursts
+      const kind = choice(['powerupMulch','powerupRepellent','powerupBounce','powerupSpeedBoost','powerupSpeedBoost','powerupFuego']);
+      powerups.push({type:kind, x, y:gY-70, r:18, taken:false});
+    } else {
+      // small breather / double wicket combo
+      wickets.push({id:wicketId++, x, y:gY-30, w:14, h:60, passed:false});
+      x += 90;
+      obstacles.push({type:'antiBoost', x:x, y:groundHeight(x), r:15, alive:true});
+    }
+    x += gap;
+  }
+
+  // ---- FINAL STRAIGHT: the whole final level is flat, boost-free ground.
+  // Whatever speed you're carrying when you hit it is all you get.
+
+  // ---- FINISH: the golden wicket gives one last triumphant boost but
+  // doesn't end the run by itself — you have to carry that speed the
+  // remaining 100 yards and strike the wooden stake to actually finish.
+  finishX = CFG.FINISH_WICKET_X;
+  const finishGY = groundHeight(finishX);
+  wickets.push({id:wicketId++, x:finishX, y:finishGY-40, w:20, h:80, passed:false, isFinish:true});
+  const stakeX = CFG.STAKE_X;
+  finishStake = { x: stakeX, y: groundHeight(stakeX), r: 24 };
+
+  // ---- ULTRA BOOST pads: rare glowing strips embedded in the ground.
+  // Roll over one and it's a much bigger speed kick than anything else.
+  // None on the final straight — see above.
+  {
+    let gx = rand(CFG.ULTRA_PAD_MIN_GAP, CFG.ULTRA_PAD_MAX_GAP);
+    while (gx < flatStartX - 200){
+      groundBoosts.push({ x: gx, w: rand(70,110), used:false });
+      gx += rand(CFG.ULTRA_PAD_MIN_GAP, CFG.ULTRA_PAD_MAX_GAP);
+    }
+  }
+}
+
+// ---------- BALL ----------
+let ball = null;
+function makeBall(){
+  return {
+    x: CFG.START_X, y: groundHeight(CFG.START_X)-CFG.BALL_RADIUS,
+    vx:0, vy:0, r:CFG.BALL_RADIUS,
+    bounceBoostReady:false,
+    power:{ mulch:0, repellent:0, fuego:0 }, // timers
+  };
+}
+
+let score = 0, comboCount = 0, bestCombo = 1, wicketsPassed = 0, gnomesSmashed = 0;
+let distanceYards = 0;
+let runOverReason = "";
+let flashTimer = 0, flashMsg = "";
+let extraLives = 0;
+let checkpointX = CFG.START_X;
+let runFinished = false;
+let lastZoneAnnounced = 0;
+let slowMoTimer = 0;
+let inventory = [null, null, null]; // three power-up slots, activated manually (keys 1/2/3 or on-screen buttons)
+
+function usePowerupSlot(slot){
+  if (gameState !== STATE.FLIGHT || !ball) return;
+  const type = inventory[slot];
+  if (!type) return;
+  inventory[slot] = null;
+  spawnParticles(ball.x, ball.y, "#fff", 16);
+  if (type==='powerupMulch'){ SFX.powerup(type); ball.power.mulch = CFG.POWERUP_DURATION; triggerFlash("MYSTERY MULCH! UNSTOPPABLE!"); }
+  if (type==='powerupRepellent'){ SFX.powerup(type); ball.power.repellent = CFG.POWERUP_DURATION; triggerFlash("BELVADEER REPELLENT!"); }
+  if (type==='powerupBounce'){ SFX.powerup(type); ball.bounceBoostReady = true; triggerFlash("MONSTROCITY BOUNCE READY!"); }
+  if (type==='powerupFuego'){ SFX.powerup(type); ball.power.fuego = CFG.POWERUP_DURATION; triggerFlash("EN FUEGO!"); }
+  if (type==='powerupSpeedBoost'){
+    // instant speed kick that works anywhere — grounded, mid-air, flat
+    // ground, doesn't matter. This is the one to save for the flat final
+    // level, where Monstrocity Bounce can't help since there's nothing to
+    // bounce off of.
+    SFX.ultraBoost();
+    const speed = Math.hypot(ball.vx, ball.vy);
+    let newSpeed = Math.min(CFG.MAX_BALL_SPEED, speed*1.8 + 380);
+    if (speed < 5){
+      ball.vx = newSpeed*0.95; ball.vy = -newSpeed*0.15;
+    } else {
+      const scale = newSpeed/speed;
+      ball.vx *= scale; ball.vy *= scale;
+    }
+    triggerFlash("🚀 ROCKET RELISH! MAX SPEED!");
+    screenShake(9, 0.2);
+  }
+}
+
+function comboMultiplier(){ return Math.min(1 + comboCount*0.5, 6); }
+
+function triggerFlash(msg){
+  flashMsg = msg; flashTimer = 0.9;
+  const el = document.getElementById('flashText');
+  el.textContent = msg;
+  el.style.opacity = 1;
+}
+
+// ---------- AIMING ----------
+// Golf-style flow: (1) move the mouse to aim, click to lock the angle,
+// (2) click again to start the power meter running,
+// (3) click a third time to lock the power and swing.
+let powerVal = 0, powerDir = 1;
+let angleVal = 45; // degrees, 0=flat,90=straight up — driven by mouse while aiming
+let lockedPower = 0, lockedAngle = 45;
+let powerMeterRunning = false;
+let mouseClientX = null, mouseClientY = null;
+
+function updateAngleFromMouse(){
+  if (!ball) return;
+  if (mouseClientX === null){ return; } // no pointer input yet — keep default angle
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+  const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+  const sx = (mouseClientX - rect.left) * scaleX;
+  const sy = (mouseClientY - rect.top) * scaleY;
+  const wx = camX + sx / camZoom;
+  const wy = camY + sy / camZoom;
+  const dx = Math.max(wx - ball.x, 1); // keep shots pointed forward
+  const dy = ball.y - wy;
+  let ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  angleVal = Math.max(5, Math.min(85, ang));
+}
+
+function updatePowerMeter(dt){
+  if (!powerMeterRunning) return;
+  powerVal += powerDir * dt * 95;
+  if (powerVal >= 100){ powerVal = 100; powerDir = -1; }
+  if (powerVal <= 0){ powerVal = 0; powerDir = 1; }
+}
+
+function handleAimClick(){
+  if (gameState === STATE.AIM_ANGLE){
+    lockedAngle = angleVal;
+    gameState = STATE.AIM_POWER;
+    powerVal = 0; powerDir = 1; powerMeterRunning = false;
+    document.getElementById('aimHint').textContent = "Click / tap / press SPACE to START the power meter!";
+  } else if (gameState === STATE.AIM_POWER){
+    if (!powerMeterRunning){
+      powerMeterRunning = true;
+      document.getElementById('aimHint').textContent = "Click / tap / press SPACE again to LOCK your power!";
+    } else {
+      lockedPower = powerVal;
+      beginHitSwing();
+    }
+  }
+}
+
+// mallet swing animation state
+let hitTimer = 0, hitContactDone = false;
+let malletStartAngle = 0, malletEndAngle = 0;
+
+function beginHitSwing(){
+  const c = selectedCharacter;
+  const angleNoise = rand(-1,1)*c.angleVariance*40;
+  const powerNoise = 1 + rand(-1,1)*c.powerVariance;
+  const finalAngle = Math.max(5, Math.min(85, lockedAngle + angleNoise));
+  const finalPower = lockedPower * powerNoise * c.powerMult;
+  const speed = finalPower * CFG.POWER_SCALE;
+  const rad = finalAngle * Math.PI/180;
+  ball.pendingVx = Math.cos(rad) * speed;
+  ball.pendingVy = -Math.sin(rad) * speed;
+  // mallet swings from a wound-up position behind the ball to the strike angle
+  malletEndAngle = finalAngle;
+  malletStartAngle = finalAngle + 130;
+  hitTimer = 0; hitContactDone = false;
+  gameState = STATE.HIT;
+  document.getElementById('aimHint').classList.add('hidden');
+}
+
+function applyLaunch(){
+  ball.vx = ball.pendingVx;
+  ball.vy = ball.pendingVy;
+  gameState = STATE.FLIGHT;
+}
+
+// ---------- COLLISIONS / PHYSICS ----------
+function anyPassPower(){
+  return ball.power.mulch>0 || ball.power.repellent>0 || ball.power.fuego>0;
+}
+function anyDestroyPower(){
+  return ball.power.mulch>0 || ball.power.fuego>0;
+}
+
+function spawnParticles(x,y,color,count){
+  for (let i=0;i<count;i++){
+    particles.push({
+      x,y, vx: rand(-220,220), vy: rand(-320,-40),
+      life: rand(0.4,0.9), maxLife: 0.9, color
+    });
+  }
+}
+
+function endRun(reason, forceWin){
+  gameState = STATE.OVER;
+  runOverReason = reason;
+  const isNewBest = forceWin || (Math.round(score) >= sessionHighScore && Math.round(score) > 0);
+  if (score > sessionHighScore) sessionHighScore = Math.round(score);
+  if (isNewBest) SFX.fanfare(); else SFX.gameOver();
+  document.getElementById('overTitle').textContent = isNewBest ? "🏆 THE GREATEST SHOT EVER 🏆" : "RUN OVER";
+  document.getElementById('overReason').textContent = reason;
+  document.getElementById('statDistance').textContent = Math.max(0,Math.round(distanceYards));
+  document.getElementById('statScore').textContent = Math.round(score);
+  document.getElementById('statWickets').textContent = wicketsPassed;
+  document.getElementById('statSmashed').textContent = gnomesSmashed;
+  document.getElementById('statCombo').textContent = "x"+bestCombo.toFixed(1);
+  document.getElementById('statBest').textContent = sessionHighScore;
+  document.getElementById('hud').classList.add('hidden');
+  document.getElementById('powerupHud').classList.add('hidden');
+  document.getElementById('invSlots').classList.add('hidden');
+  document.getElementById('overScreen').classList.remove('hidden');
+}
+
+// Called whenever something would normally end the run. If the player has
+// an extra life banked (earned every CFG.WICKETS_PER_LIFE wickets), they
+// get another swing from their last checkpoint instead of the run ending.
+function loseLifeOrEnd(reason){
+  if (extraLives > 0){
+    extraLives--;
+    respawnAtCheckpoint();
+    triggerFlash("EXTRA LIFE USED! SHOT FROM CHECKPOINT ("+extraLives+" left)");
+    SFX.freed();
+  } else {
+    endRun(reason);
+  }
+}
+
+function respawnAtCheckpoint(){
+  ball.x = checkpointX;
+  ball.y = groundHeight(checkpointX) - ball.r;
+  ball.vx = 0; ball.vy = 0;
+  ball.bounceBoostReady = false;
+  ball.power.mulch = 0; ball.power.repellent = 0; ball.power.fuego = 0;
+  gameState = STATE.AIM_ANGLE;
+  angleVal = 45; lockedAngle = 45; lockedPower = 0; powerVal = 0; powerMeterRunning = false;
+  document.getElementById('aimHint').classList.remove('hidden');
+  document.getElementById('aimHint').textContent = "Move your mouse to aim, then click / tap / press SPACE to lock your ANGLE!";
+}
+
+function finishRun(){
+  if (runFinished) return;
+  runFinished = true;
+  score += 800 * Math.max(1, comboMultiplier());
+  spawnParticles(finishStake.x, ball.y, "#ffd23f", 40);
+  spawnParticles(finishStake.x, ball.y, "#ffffff", 20);
+  screenShake(16, 0.4);
+  endRun("You struck the stake — THE GREATEST SHOT EVER!", true);
+}
+
+function updateFlight(dt){
+  // powerup timers
+  for (const k in ball.power){ if (ball.power[k]>0) ball.power[k] = Math.max(0, ball.power[k]-dt); }
+
+  // physics integration
+  ball.vy += CFG.GRAVITY*dt;
+  ball.vx *= CFG.AIR_DRAG;
+  ball.x += ball.vx*dt;
+  ball.y += ball.vy*dt;
+
+  // ground collision — distinguish a real bounce (falling in fast) from
+  // resting/rolling contact (small vertical speed each frame from gravity).
+  // Bounce friction is a one-time impact loss; rolling friction decays
+  // smoothly over time so the ball can actually travel.
+  const gY = groundHeight(ball.x) - ball.r;
+  if (ball.y >= gY){
+    ball.y = gY;
+    if (ball.vy > CFG.BOUNCE_MIN_SPEED){
+      let boost = 1;
+      if (ball.bounceBoostReady){ boost = 2.6; ball.bounceBoostReady = false; triggerFlash("MONSTROCITY BOUNCE!"); spawnParticles(ball.x,ball.y,"#4fd6ff",26); screenShake(14,0.3); SFX.boost(); }
+      ball.vy = -ball.vy * CFG.GROUND_RESTITUTION * boost;
+      ball.vx *= CFG.GROUND_FRICTION;
+    } else {
+      // rolling along the lawn
+      ball.vy = 0;
+      const rollDecay = Math.pow(CFG.ROLL_FRICTION_PER_SEC, dt);
+      ball.vx *= rollDecay;
+      // gentle slope assist so the ball rolls downhill / slows uphill
+      const slope = (groundHeight(ball.x+8) - groundHeight(ball.x-8)) / 16;
+      ball.vx += slope * 260 * dt;
+    }
+  }
+
+  // world floor (never fall through map bottom)
+  if (ball.y > canvas.height + 400){ loseLifeOrEnd("The ball vanished into the void."); return; }
+
+  // obstacle collisions
+  for (const o of obstacles){
+    if (!o.alive) continue;
+    const dx = ball.x-o.x, dy = ball.y-(o.y - o.r*0.6);
+    const dist = Math.hypot(dx,dy);
+    const collideR = ball.r + o.r*0.8;
+    // re-arm the anti-boost hazard once the ball has fully cleared it, so a
+    // slow ball dwelling inside the collision radius for several frames
+    // doesn't get dampened over and over (which compounds into what feels
+    // like an instant wall even though no single hit is that harsh)
+    if (o.type === 'antiBoost' && dist >= collideR*1.4){ o.hitCooldown = false; }
+    if (dist < collideR){
+      if (o.type === 'gnome' || o.type === 'gnomeHard'){
+        const ballSpeed = Math.hypot(ball.vx, ball.vy);
+        const catchSpeed = o.type==='gnomeHard' ? CFG.GNOME_CATCH_SPEED_HARD : CFG.GNOME_CATCH_SPEED;
+        const tooFastToCatch = ballSpeed >= catchSpeed;
+        if (anyPassPower() || tooFastToCatch){
+          o.alive = false;
+          gnomesSmashed++;
+          const bonus = (o.type==='gnomeHard'?400:250) * comboMultiplier();
+          score += bonus;
+          // shatter burst — ceramic-fragment colors (body + red hat)
+          spawnParticles(o.x,o.y,"#e8c39e",14);
+          spawnParticles(o.x,o.y,"#c8352c",12);
+          spawnParticles(o.x,o.y,"#5b3a1e",10);
+          triggerFlash(tooFastToCatch && !anyPassPower() ? "TOO FAST TO CATCH! +"+Math.round(bonus) : "GNOME SMASHED! +"+Math.round(bonus));
+          screenShake(8,0.2);
+          SFX.gnomeSmash();
+          slowMoTimer = CFG.SLOWMO_DURATION; // hit-stop so the smash is actually visible
+        } else {
+          spawnParticles(o.x,o.y,"#3a1f0a",10);
+          SFX.gnomeCackle();
+          loseLifeOrEnd("Grabbed by a " + (o.type==='gnomeHard'?"tough":"") + " Belvadeer gnome!");
+          return;
+        }
+      } else if (o.type === 'antiBoost'){
+        if (anyDestroyPower()){
+          o.alive = false;
+          score += 150*comboMultiplier();
+          spawnParticles(o.x,o.y-o.r,"#8a7a5a",18);
+          triggerFlash("HAZARD SMASHED!");
+          SFX.treeSmash();
+        } else if (!o.hitCooldown){
+          o.hitCooldown = true; // don't re-trigger every frame while still overlapping
+          // saps speed but keeps rolling — never an instant stop.
+          // The dampening is gentler, and we guarantee a minimum post-hit
+          // speed so the ball visibly keeps moving instead of reading as
+          // an abrupt halt (which happens if speed drops below the
+          // "rolled to a stop" threshold in the same frame it's hit).
+          ball.vx *= 0.78; ball.vy *= 0.8;
+          const hitSpeed = Math.hypot(ball.vx, ball.vy);
+          const minRollSpeed = CFG.MIN_STOP_SPEED * 1.8;
+          if (hitSpeed > 0 && hitSpeed < minRollSpeed){
+            const scale = minRollSpeed / hitSpeed;
+            ball.vx *= scale; ball.vy *= scale;
+          }
+          comboCount = Math.floor(comboCount/2);
+          spawnParticles(o.x,o.y-o.r,"#6b5a4a",12);
+          triggerFlash("ANTI-BOOST!");
+          SFX.treeBlock();
+        }
+      } else if (o.type === 'treeAncient'){
+        const ang = rand(55,80)*Math.PI/180;
+        const sp = Math.max(620, Math.hypot(ball.vx,ball.vy)*1.5);
+        ball.vx = Math.cos(ang)*sp*(ball.vx<0?-1:1);
+        ball.vy = -Math.sin(ang)*sp;
+        score += 200;
+        spawnParticles(o.x,o.y-o.r,"#ffd23f",24);
+        triggerFlash("ANCIENT BOOST!");
+        screenShake(12,0.28);
+        SFX.boost();
+      }
+    }
+  }
+
+  // wickets
+  for (const w of wickets){
+    if (w.passed) continue;
+    if (Math.abs(ball.x - w.x) < w.w && ball.y > w.y-w.h/2 && ball.y < w.y+w.h/2){
+      w.passed = true;
+
+      if (w.isFinish){
+        // the golden wicket doesn't end the run — it gives one last
+        // triumphant boost and sends you on toward the stake
+        const speed = Math.hypot(ball.vx, ball.vy);
+        let newSpeed = Math.min(CFG.MAX_BALL_SPEED, speed*1.5 + 260);
+        if (speed < 5){
+          ball.vx = newSpeed*0.95; ball.vy = -newSpeed*0.2;
+        } else {
+          const scale = newSpeed/speed;
+          ball.vx *= scale; ball.vy *= scale;
+        }
+        triggerFlash("THROUGH THE GOLDEN WICKET!");
+        spawnParticles(w.x, w.y, "#ffd23f", 30);
+        screenShake(10, 0.25);
+        SFX.boost();
+        continue;
+      }
+
+      comboCount++;
+      bestCombo = Math.max(bestCombo, comboMultiplier());
+      wicketsPassed++;
+      const bonus = 100*comboMultiplier();
+      score += bonus;
+      spawnParticles(w.x,w.y,"#ffffff",16);
+
+      // every N wickets: grant an extra life and move the checkpoint up
+      if (wicketsPassed % CFG.WICKETS_PER_LIFE === 0 && extraLives < CFG.MAX_EXTRA_LIVES){
+        extraLives++;
+        checkpointX = ball.x;
+        triggerFlash("CHECKPOINT! +1 LIFE ("+extraLives+")");
+        SFX.checkpoint();
+      } else {
+        triggerFlash("WICKET! x"+comboMultiplier().toFixed(1));
+        SFX.wicket(comboCount);
+      }
+
+      // keep the ball going — every wicket gives a speed boost, and it
+      // hits harder the longer the combo streak runs
+      const speed = Math.hypot(ball.vx, ball.vy);
+      const comboBonus = Math.min(comboCount, 12) * CFG.WICKET_BOOST_PER_COMBO;
+      let newSpeed = Math.min(CFG.MAX_BALL_SPEED, speed*CFG.WICKET_BOOST_MULT + CFG.WICKET_BOOST_FLAT + comboBonus);
+      if (speed < 5){
+        // ball nearly stopped right in the hoop — send it off again
+        ball.vx = newSpeed*0.85;
+        ball.vy = -newSpeed*0.45;
+      } else {
+        const scale = newSpeed/speed;
+        ball.vx *= scale;
+        ball.vy *= scale;
+      }
+      spawnParticles(ball.x,ball.y,"#ffd23f",10);
+    }
+  }
+
+  // ground-embedded ULTRA BOOST pads — a rare, much bigger speed kick
+  for (const gb of groundBoosts){
+    if (gb.used) continue;
+    if (ball.x > gb.x && ball.x < gb.x+gb.w && ball.y >= groundHeight(ball.x) - ball.r - 6){
+      gb.used = true;
+      const speed = Math.hypot(ball.vx, ball.vy);
+      let newSpeed = Math.min(CFG.MAX_BALL_SPEED, speed*CFG.ULTRA_BOOST_MULT + CFG.ULTRA_BOOST_FLAT);
+      if (speed < 5){
+        ball.vx = newSpeed*0.9;
+        ball.vy = -newSpeed*0.35;
+      } else {
+        const scale = newSpeed/speed;
+        ball.vx *= scale;
+        ball.vy *= scale;
+      }
+      triggerFlash("⚡ ULTRA BOOST! ⚡");
+      spawnParticles(gb.x+gb.w/2, ball.y, "#4fd6ff", 22);
+      spawnParticles(gb.x+gb.w/2, ball.y, "#ffd23f", 18);
+      screenShake(11, 0.26);
+      SFX.ultraBoost();
+    }
+  }
+
+  // the finish stake — the actual win condition. The golden wicket just
+  // boosts you; you have to physically carry that speed and hit this.
+  if (finishStake && !runFinished){
+    const d = Math.hypot(ball.x-finishStake.x, ball.y-finishStake.y);
+    if (d < ball.r + finishStake.r*0.7){
+      finishRun();
+      return;
+    }
+  }
+
+  // powerups — picked up into the inventory (not auto-activated). Use
+  // number keys 1/2 or the on-screen slot buttons to trigger them.
+  const POWERUP_NAMES = { powerupMulch:"MYSTERY MULCH", powerupRepellent:"BELVADEER REPELLENT", powerupBounce:"MONSTROCITY BOUNCE", powerupFuego:"EN FUEGO", powerupSpeedBoost:"ROCKET RELISH" };
+  for (const p of powerups){
+    if (p.taken) continue;
+    const d = Math.hypot(ball.x-p.x, ball.y-p.y);
+    const collideR = ball.r+p.r;
+    if (d >= collideR*1.4){ p.declineCooldown = false; }
+    if (d < collideR){
+      const emptySlot = inventory.indexOf(null);
+      if (emptySlot === -1){
+        if (!p.declineCooldown){
+          p.declineCooldown = true;
+          triggerFlash("INVENTORY FULL! Use a power-up first (1 or 2)");
+        }
+        continue;
+      }
+      p.taken = true;
+      inventory[emptySlot] = p.type;
+      spawnParticles(p.x,p.y,"#fff",20);
+      SFX.pickup();
+      triggerFlash("GOT " + POWERUP_NAMES[p.type] + "! Press " + (emptySlot+1) + " to use it");
+    }
+  }
+
+  // fuego trail
+  if (ball.power.fuego>0 && Math.random()<0.6){
+    particles.push({x:ball.x-ball.vx*0.01,y:ball.y-ball.vy*0.01,vx:rand(-30,30),vy:rand(-40,10),life:0.35,maxLife:0.35,color:"#ff6a1a"});
+  }
+
+  // scoring by distance
+  const distDelta = Math.max(0, ball.vx*dt);
+  score += distDelta*0.06;
+  distanceYards = Math.max(distanceYards, (ball.x - CFG.START_X)/9);
+
+  // stop condition
+  const speed = Math.hypot(ball.vx, ball.vy);
+  if (speed < CFG.MIN_STOP_SPEED && Math.abs(ball.y - gY) < 2){
+    loseLifeOrEnd("The ball rolled to a stop.");
+    return;
+  }
+
+  // out of world bounds (safety net in case the ball tunnels clean past the stake at extreme speed)
+  if (finishStake && ball.x > finishStake.x + finishStake.r + 60){
+    finishRun();
+    return;
+  }
+}
+
+function updateParticles(dt){
+  for (const p of particles){
+    p.life -= dt;
+    p.x += p.vx*dt; p.y += p.vy*dt;
+    p.vy += 500*dt;
+  }
+  particles = particles.filter(p=>p.life>0);
+}
+
+// ---------- MALLET (placeholder art — swap via SPRITES.mallet.image) ----------
+SPRITES.mallet = { image:null, draw(ctx,x,y,s){
+  // just the mallet head — the shaft is drawn separately, connecting the
+  // avatar's hand to this point, so the swing visually reads as the
+  // character actually gripping and swinging the mallet.
+  ctx.save(); ctx.translate(x,y);
+  ctx.fillStyle="#5b3a1e"; ctx.fillRect(-s*0.55,-s*0.22,s*1.1,s*0.44);
+  ctx.strokeStyle="#2b1a06"; ctx.lineWidth=2; ctx.strokeRect(-s*0.55,-s*0.22,s*1.1,s*0.44);
+  ctx.restore();
+}};
+function drawMallet(bx,by,angleDeg,handX,handY){
+  const s = ball ? ball.r : 12;
+  const dist = s*2.6;
+  const rad = angleDeg*Math.PI/180;
+  const headX = bx - Math.cos(rad)*dist;
+  const headY = by + Math.sin(rad)*dist;
+  const originX = handX!==undefined ? handX : headX - Math.cos(rad)*s*1.6;
+  const originY = handY!==undefined ? handY : headY + Math.sin(rad)*s*1.6;
+
+  // shaft — connects the avatar's hand to the mallet head
+  ctx.save();
+  ctx.strokeStyle="#8a5a2a"; ctx.lineWidth=Math.max(2,s*0.22); ctx.lineCap="round";
+  ctx.beginPath(); ctx.moveTo(originX,originY); ctx.lineTo(headX,headY); ctx.stroke();
+  ctx.restore();
+
+  // head, oriented perpendicular to the shaft direction
+  const shaftAngle = Math.atan2(headY-originY, headX-originX);
+  const sp = SPRITES.mallet;
+  ctx.save(); ctx.translate(headX,headY); ctx.rotate(shaftAngle+Math.PI/2);
+  if (sp.image && sp.image.complete && sp.image.naturalWidth>0){
+    ctx.drawImage(sp.image, -s, -s*0.3, s*2, s*0.6);
+  } else {
+    sp.draw(ctx, 0, 0, s);
+  }
+  ctx.restore();
+}
+
+// ---------- CAMERA ----------
+function currentTargetZoom(){
+  if (gameState===STATE.AIM_POWER || gameState===STATE.AIM_ANGLE) return CFG.AIM_ZOOM;
+  if (gameState===STATE.HIT) return CFG.HIT_ZOOM;
+  if (gameState===STATE.FLIGHT && ball){
+    const speed = Math.hypot(ball.vx, ball.vy);
+    let z = CFG.FLIGHT_ZOOM_MAX - (speed/1100)*(CFG.FLIGHT_ZOOM_MAX-CFG.FLIGHT_ZOOM_MIN);
+    z = Math.max(CFG.FLIGHT_ZOOM_MIN, Math.min(CFG.FLIGHT_ZOOM_MAX, z));
+
+    // Zoom out further the higher the ball climbs, so the ground line is
+    // always visible on screen instead of scrolling out of frame. This is
+    // the exact zoom level at which the ground sits right at the bottom
+    // edge of the viewport, given where the ball sits vertically (CAM_Y_BIAS).
+    const heightAboveGround = Math.max(0, groundHeight(ball.x) - ball.y);
+    if (heightAboveGround > 0){
+      const maxZoomForGround = (canvas.height*(1-CFG.CAM_Y_BIAS)) / (heightAboveGround + 50);
+      z = Math.min(z, maxZoomForGround);
+    }
+    return Math.max(CFG.FLIGHT_ZOOM_ABS_MIN, z);
+  }
+  return camZoom;
+}
+
+function updateCamera(dt){
+  if (!ball) return;
+  const targetZoom = currentTargetZoom();
+  camZoom += (targetZoom-camZoom)*CFG.ZOOM_LERP;
+
+  const targetX = ball.x - (canvas.width*CFG.CAM_X_BIAS)/camZoom;
+  const targetY = ball.y - (canvas.height*CFG.CAM_Y_BIAS)/camZoom;
+  const lerp = (gameState===STATE.FLIGHT) ? CFG.CAMERA_LERP : CFG.CAMERA_LERP_AIM;
+  camX += (targetX-camX)*lerp;
+  camY += (targetY-camY)*lerp;
+
+  if (shakeTimer>0) shakeTimer = Math.max(0, shakeTimer-dt);
+}
+
+// ---------- RENDER ----------
+function render(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const distYardsNow = ball ? Math.max(0, (ball.x - CFG.START_X)/9) : 0;
+  const blend = getZoneBlend(distYardsNow);
+
+  // sky
+  const sky = ctx.createLinearGradient(0,0,0,canvas.height);
+  sky.addColorStop(0,rgbStr(blend.sky[0])); sky.addColorStop(0.6,rgbStr(blend.sky[1])); sky.addColorStop(1,rgbStr(blend.sky[2]));
+  ctx.fillStyle = sky; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // parallax trailer-park silhouettes
+  ctx.fillStyle = rgbStr(blend.silA);
+  for (let i=-1;i<8;i++){
+    const bx = (i*260 - camX*0.35) % (260*8);
+    ctx.fillRect(bx, 300, 140, 90);
+    ctx.fillRect(bx+150, 330, 70, 60);
+  }
+  ctx.fillStyle = rgbStr(blend.silB);
+  for (let i=-1;i<10;i++){
+    const bx=(i*180 - camX*0.6) % (180*10);
+    ctx.beginPath(); ctx.arc(bx,330,60,0,Math.PI*2); ctx.fill();
+  }
+
+  ctx.save();
+
+  // screen shake (applied before zoom so it reads as camera jitter, not world jitter)
+  if (shakeTimer>0){
+    const falloff = shakeTimer/0.3;
+    ctx.translate(rand(-1,1)*shakeMag*falloff, rand(-1,1)*shakeMag*falloff);
+  }
+
+  ctx.scale(camZoom, camZoom);
+  ctx.translate(-camX, -camY);
+
+  // ground
+  const viewLeft = camX - 100, viewRight = camX + canvas.width/camZoom + 100;
+  const viewBottom = camY + canvas.height/camZoom + 100;
+  ctx.beginPath();
+  ctx.moveTo(viewLeft, viewBottom);
+  for (let x = viewLeft; x < viewRight; x+=20){
+    ctx.lineTo(x, groundHeight(x));
+  }
+  ctx.lineTo(viewRight, viewBottom);
+  ctx.closePath();
+  const gGrad = ctx.createLinearGradient(0,320,0,viewBottom);
+  gGrad.addColorStop(0,rgbStr(blend.ground[0])); gGrad.addColorStop(1,rgbStr(blend.ground[1]));
+  ctx.fillStyle = gGrad; ctx.fill();
+
+  // ground-embedded ULTRA BOOST pads — glowing speed lanes painted on the lawn
+  for (const gb of groundBoosts){
+    if (gb.x < viewLeft-100 || gb.x > viewRight+100) continue;
+    const pulse = 0.5+0.5*Math.sin(performance.now()*0.006 + gb.x);
+    ctx.beginPath();
+    for (let px=gb.x; px<=gb.x+gb.w; px+=8){
+      const py = groundHeight(px);
+      if (px===gb.x) ctx.moveTo(px,py-3); else ctx.lineTo(px,py-3);
+    }
+    for (let px=gb.x+gb.w; px>=gb.x; px-=8){
+      ctx.lineTo(px, groundHeight(px)+7);
+    }
+    ctx.closePath();
+    const padGrad = ctx.createLinearGradient(gb.x,0,gb.x+gb.w,0);
+    if (gb.used){
+      padGrad.addColorStop(0,"rgba(110,110,120,0.2)");
+      padGrad.addColorStop(1,"rgba(110,110,120,0.12)");
+    } else {
+      padGrad.addColorStop(0, `rgba(79,214,255,${0.3+0.25*pulse})`);
+      padGrad.addColorStop(0.5, `rgba(255,210,63,${0.35+0.3*pulse})`);
+      padGrad.addColorStop(1, `rgba(79,214,255,${0.3+0.25*pulse})`);
+    }
+    ctx.fillStyle = padGrad; ctx.fill();
+    if (!gb.used){
+      ctx.fillStyle = `rgba(255,255,255,${0.55+0.4*pulse})`;
+      for (let cx=gb.x+14; cx<gb.x+gb.w-8; cx+=26){
+        const cy = groundHeight(cx)+2;
+        ctx.beginPath();
+        ctx.moveTo(cx-7,cy-7); ctx.lineTo(cx+6,cy); ctx.lineTo(cx-7,cy+7); ctx.lineTo(cx-2,cy);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+  }
+
+  // decorations (non-collidable flourish)
+  for (const d of decorations){
+    if (d.x < viewLeft-80 || d.x > viewRight+80) continue;
+    drawSprite(d.type, d.x, d.y, d.r);
+  }
+
+  // the finish stake — collidable; this is what actually ends the run
+  if (finishStake && finishStake.x >= viewLeft-80 && finishStake.x <= viewRight+80){
+    drawSprite('finishStake', finishStake.x, finishStake.y, finishStake.r);
+  }
+
+  // wickets (behind so ball reads on top passing through)
+  for (const w of wickets){
+    if (w.x < viewLeft-50 || w.x > viewRight+50) continue;
+    ctx.globalAlpha = w.passed ? 0.35 : 1;
+    drawSprite(w.isFinish ? 'goldenWicket' : 'wicket', w.x, w.y+w.h/2, w.h/2);
+    ctx.globalAlpha = 1;
+  }
+
+  // powerups
+  for (const p of powerups){
+    if (p.taken) continue;
+    if (p.x < viewLeft-50 || p.x > viewRight+50) continue;
+    const bob = Math.sin(performance.now()*0.004 + p.x)*4;
+    drawSprite(p.type, p.x, p.y+bob, p.r);
+  }
+
+  // obstacles
+  for (const o of obstacles){
+    if (!o.alive) continue;
+    if (o.x < viewLeft-50 || o.x > viewRight+50) continue;
+    drawSprite(o.type, o.x, o.y, o.r);
+  }
+
+  // particles
+  for (const p of particles){
+    ctx.globalAlpha = Math.max(0,p.life/p.maxLife);
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  // ball
+  if (ball){
+    let bx = ball.x, by = ball.y;
+
+    // player avatar — determine the mallet's swing angle and a 0..1
+    // "swing progress" used
+    let currentMalletAngle = null;
+    let swingProgress = 0;
+    if (gameState===STATE.AIM_ANGLE){
+      currentMalletAngle = angleVal + 130;
+    } else if (gameState===STATE.AIM_POWER){
+      currentMalletAngle = lockedAngle + 130;
+    } else if (gameState===STATE.HIT){
+      const t = Math.min(1, hitTimer/CFG.HIT_DURATION);
+      swingProgress = t*t*(3-2*t); // smoothstep
+      currentMalletAngle = malletStartAngle + (malletEndAngle-malletStartAngle)*swingProgress;
+    }
+
+    // player avatar — stands close enough to the ball that the mallet
+    // shaft visibly connects hand to head, and leans into the swing
+    let handX, handY;
+    if (selectedCharacter && currentMalletAngle !== null){
+      const avKey = 'avatar' + selectedCharacter.name;
+      const avOffsetX = ball.r*2.3;
+      const avSize = ball.r*1.35;
+      const avX = bx - avOffsetX;
+      const avFeetY = groundHeight(avX);
+      const lean = (swingProgress-0.5)*0.5; // leans back on windup, forward through impact
+      ctx.save();
+      ctx.translate(avX, avFeetY);
+      ctx.rotate(lean);
+      ctx.translate(-avX, -avFeetY);
+      drawSprite(avKey, avX, avFeetY, avSize);
+      ctx.restore();
+      handX = avX + avSize*0.85;
+      handY = avFeetY - avSize*1.75;
+    }
+    if (currentMalletAngle !== null){
+      drawMallet(bx,by,currentMalletAngle,handX,handY);
+    }
+
+    if (ball.power.fuego>0){
+      ctx.save(); ctx.shadowColor="#ff6a1a"; ctx.shadowBlur=25;
+      drawSprite('ball', bx, by, ball.r);
+      ctx.restore();
+    } else if (ball.power.mulch>0){
+      ctx.save(); ctx.shadowColor="#8a5a2a"; ctx.shadowBlur=20;
+      drawSprite('ball', bx, by, ball.r);
+      ctx.restore();
+    } else if (ball.power.repellent>0){
+      ctx.save(); ctx.shadowColor="#4fae2f"; ctx.shadowBlur=18;
+      drawSprite('ball', bx, by, ball.r);
+      ctx.restore();
+    } else {
+      drawSprite('ball', bx, by, ball.r);
+    }
+
+    // aiming trajectory indicator
+    if (gameState===STATE.AIM_POWER || gameState===STATE.AIM_ANGLE){
+      const ang = (gameState===STATE.AIM_ANGLE ? angleVal : lockedAngle||angleVal) * Math.PI/180;
+      const len = 70 + (gameState===STATE.AIM_POWER? powerVal: lockedPower)*0.9;
+      ctx.strokeStyle="#ffd23f"; ctx.lineWidth=4/camZoom;
+      ctx.beginPath(); ctx.moveTo(bx,by);
+      ctx.lineTo(bx+Math.cos(ang)*len, by-Math.sin(ang)*len);
+      ctx.stroke();
+      ctx.beginPath(); ctx.arc(bx+Math.cos(ang)*len, by-Math.sin(ang)*len, 5,0,Math.PI*2);
+      ctx.fillStyle="#ffd23f"; ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
+// ---------- HUD updates ----------
+function updateHudDom(){
+  document.getElementById('hudScore').textContent = Math.round(score);
+  document.getElementById('hudCombo').textContent = "x"+comboMultiplier().toFixed(1);
+  document.getElementById('hudDistance').textContent = Math.max(0,Math.round(distanceYards));
+  document.getElementById('hudWickets').textContent = wicketsPassed;
+  document.getElementById('hudSmashed').textContent = gnomesSmashed;
+  document.getElementById('hudLives').textContent = extraLives>0 ? "❤".repeat(extraLives) : "—";
+
+  const puEl = document.getElementById('powerupHud');
+  let active = [];
+  if (ball){
+    if (ball.power.mulch>0) active.push("🟤 Mystery Mulch "+ball.power.mulch.toFixed(1)+"s");
+    if (ball.power.repellent>0) active.push("🟢 Belvadeer Repellent "+ball.power.repellent.toFixed(1)+"s");
+    if (ball.power.fuego>0) active.push("🔥 En Fuego "+ball.power.fuego.toFixed(1)+"s");
+    if (ball.bounceBoostReady) active.push("🔵 Monstrocity Bounce READY");
+  }
+  if (active.length){
+    puEl.textContent = active.join("   ");
+    puEl.classList.remove('hidden');
+  } else {
+    puEl.classList.add('hidden');
+  }
+
+  updateInventoryUI();
+
+  if (flashTimer>0){
+    flashTimer -= 1/60;
+    if (flashTimer<=0) document.getElementById('flashText').style.opacity = 0;
+  }
+}
+
+const POWERUP_COLORS = { powerupMulch:"#8a5a2a", powerupRepellent:"#4fae2f", powerupBounce:"#4fd6ff", powerupFuego:"#ff6a1a", powerupSpeedBoost:"#ff3d9e" };
+const POWERUP_LETTERS = { powerupMulch:"M", powerupRepellent:"R", powerupBounce:"B", powerupFuego:"F", powerupSpeedBoost:"S" };
+function updateInventoryUI(){
+  for (let i=0;i<3;i++){
+    const el = document.getElementById('invSlot'+i);
+    if (!el) continue;
+    const type = inventory[i];
+    if (type){
+      el.innerHTML = (i+1) + "<br>" + POWERUP_LETTERS[type];
+      el.style.background = POWERUP_COLORS[type];
+      el.disabled = false;
+    } else {
+      el.innerHTML = String(i+1);
+      el.style.background = "";
+      el.disabled = true;
+    }
+  }
+}
+
+// ---------- MAIN LOOP ----------
+let lastTime = performance.now();
+function loop(now){
+  const dt = Math.min(0.033, (now-lastTime)/1000);
+  lastTime = now;
+
+  // hit-stop slow motion — used to savor a Belvadeer smash. Ticks down in
+  // real time regardless of the scale it applies to gameplay, so the
+  // slowdown always lasts the same real-world duration.
+  const timeScale = slowMoTimer > 0 ? CFG.SLOWMO_SCALE : 1;
+  if (slowMoTimer > 0) slowMoTimer = Math.max(0, slowMoTimer - dt);
+  const dtGame = dt * timeScale;
+
+  if (gameState===STATE.AIM_ANGLE){
+    updateAngleFromMouse();
+  } else if (gameState===STATE.AIM_POWER){
+    updatePowerMeter(dt);
+    if (powerMeterRunning){
+      document.getElementById('aimHint').textContent = "POWER: "+Math.round(powerVal)+"%  — click / tap / SPACE to LOCK!";
+    }
+  } else if (gameState===STATE.HIT){
+    hitTimer += dt;
+    if (!hitContactDone && hitTimer >= CFG.HIT_DURATION*CFG.HIT_CONTACT_FRACTION){
+      hitContactDone = true;
+      spawnParticles(ball.x, ball.y, "#ffffff", 14);
+      screenShake(6, 0.15);
+      SFX.hit();
+    }
+    if (hitTimer >= CFG.HIT_DURATION){
+      applyLaunch();
+    }
+    updateHudDom();
+  } else if (gameState===STATE.FLIGHT){
+    updateFlight(dtGame);
+    updateHudDom();
+    if (ball){
+      const zIdx = zoneIndexFor(distanceYards);
+      if (zIdx > lastZoneAnnounced){
+        lastZoneAnnounced = zIdx;
+        triggerFlash("LEVEL " + (zIdx+1) + ": " + ZONES[zIdx].name);
+        SFX.zoneChange();
+      }
+    }
+  }
+  if (ball && (gameState===STATE.AIM_POWER || gameState===STATE.AIM_ANGLE || gameState===STATE.HIT || gameState===STATE.FLIGHT)){
+    updateCamera(dtGame);
+  }
+  updateParticles(dtGame);
+  render();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// ---------- SCREEN / STATE MANAGEMENT ----------
+const screens = {
+  start: document.getElementById('startScreen'),
+  select: document.getElementById('charScreen'),
+  over: document.getElementById('overScreen'),
+};
+function showOnly(name){
+  for (const k in screens) screens[k].classList.add('hidden');
+  if (screens[name]) screens[name].classList.remove('hidden');
+}
+
+function buildCharCards(){
+  const row = document.getElementById('charRow');
+  row.innerHTML = "";
+  Object.values(CHARACTERS).forEach(c=>{
+    const card = document.createElement('div');
+    card.className = 'charCard';
+    card.dataset.key = c.key;
+    card.innerHTML = `
+      <canvas class="avatarPreview" width="120" height="140"></canvas>
+      <h3 style="color:${c.color}">${c.name}</h3>
+      <p>${c.tagline}</p>
+      <div>Power</div><div class="statBar"><div class="statFill" style="width:${c.stats.power*100}%;background:${c.color}"></div></div>
+      <div>Accuracy</div><div class="statBar"><div class="statFill" style="width:${c.stats.accuracy*100}%;background:${c.color}"></div></div>
+      <div>Chaos</div><div class="statBar"><div class="statFill" style="width:${c.stats.chaos*100}%;background:${c.color}"></div></div>
+    `;
+    card.addEventListener('click', ()=>{
+      document.querySelectorAll('.charCard').forEach(el=>el.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedCharacter = c;
+      document.getElementById('confirmCharBtn').disabled = false;
+    });
+    row.appendChild(card);
+
+    // draw the avatar preview onto its own mini canvas
+    const avCanvas = card.querySelector('.avatarPreview');
+    const avCtx = avCanvas.getContext('2d');
+    avCtx.fillStyle = "rgba(255,255,255,0.06)";
+    avCtx.fillRect(0,0,avCanvas.width,avCanvas.height);
+    drawSpriteOn(avCtx, 'avatar'+c.name, avCanvas.width/2, avCanvas.height-14, 34);
+  });
+}
+buildCharCards();
+
+function startNewRun(){
+  generateWorld();
+  ball = makeBall();
+  camX = ball.x - (canvas.width*CFG.CAM_X_BIAS)/CFG.AIM_ZOOM;
+  camY = ball.y - (canvas.height*CFG.CAM_Y_BIAS)/CFG.AIM_ZOOM;
+  camZoom = CFG.AIM_ZOOM;
+  shakeTimer = 0; slowMoTimer = 0;
+  score = 0; comboCount = 0; bestCombo = 1; wicketsPassed = 0; gnomesSmashed = 0; distanceYards = 0;
+  extraLives = 0; checkpointX = ball.x; runFinished = false; lastZoneAnnounced = 0;
+  inventory = [null, null, null];
+  powerVal = 0; powerDir = 1; angleVal = 45; lockedAngle = 45; lockedPower = 0; powerMeterRunning = false;
+  hitTimer = 0; hitContactDone = false;
+  gameState = STATE.AIM_ANGLE;
+  document.getElementById('hud').classList.remove('hidden');
+  document.getElementById('invSlots').classList.remove('hidden');
+  document.getElementById('aimHint').classList.remove('hidden');
+  document.getElementById('aimHint').textContent = "Move your mouse to aim, then click / tap / press SPACE to lock your ANGLE!";
+  document.getElementById('overScreen').classList.add('hidden');
+  showOnly(null);
+}
+
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  SFX.unlock();
+  showOnly('select');
+});
+document.getElementById('confirmCharBtn').addEventListener('click', ()=>{
+  SFX.unlock();
+  if (!selectedCharacter) return;
+  startNewRun();
+});
+document.getElementById('restartBtn').addEventListener('click', ()=>{
+  SFX.unlock();
+  startNewRun();
+});
+document.getElementById('menuBtn').addEventListener('click', ()=>{
+  showOnly('select');
+});
+
+function handleAimInput(){
+  SFX.unlock();
+  if (gameState===STATE.AIM_POWER || gameState===STATE.AIM_ANGLE){
+    handleAimClick();
+  }
+}
+canvas.addEventListener('mousedown', handleAimInput);
+canvas.addEventListener('mousemove', (e)=>{
+  mouseClientX = e.clientX; mouseClientY = e.clientY;
+});
+canvas.addEventListener('touchstart', (e)=>{
+  e.preventDefault();
+  if (e.touches[0]){ mouseClientX = e.touches[0].clientX; mouseClientY = e.touches[0].clientY; }
+  if (gameState===STATE.AIM_ANGLE) updateAngleFromMouse(); // aim to the tap point before locking
+  handleAimInput();
+}, {passive:false});
+canvas.addEventListener('touchmove', (e)=>{
+  e.preventDefault();
+  if (e.touches[0]){ mouseClientX = e.touches[0].clientX; mouseClientY = e.touches[0].clientY; }
+}, {passive:false});
+window.addEventListener('keydown', (e)=>{
+  if (e.code==='Space'){ e.preventDefault(); handleAimInput(); }
+  if (e.code==='Digit1' || e.code==='Numpad1'){ usePowerupSlot(0); }
+  if (e.code==='Digit2' || e.code==='Numpad2'){ usePowerupSlot(1); }
+  if (e.code==='Digit3' || e.code==='Numpad3'){ usePowerupSlot(2); }
+});
+
+document.getElementById('invSlot0').addEventListener('click', ()=>usePowerupSlot(0));
+document.getElementById('invSlot1').addEventListener('click', ()=>usePowerupSlot(1));
+document.getElementById('invSlot2').addEventListener('click', ()=>usePowerupSlot(2));
+
+// initial screen
+showOnly('start');
+
+document.getElementById('muteBtn').addEventListener('click', ()=>{
+  SFX.unlock();
+  const nowMuted = !SFX.isMuted();
+  SFX.setMuted(nowMuted);
+  document.getElementById('muteBtn').textContent = nowMuted ? "🔇" : "🔊";
+});
+</script>
+</body>
+</html>

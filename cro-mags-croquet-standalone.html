@@ -1,0 +1,2859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blood Sweat Monkeys presents: Blevadere Croquet</title>
+<style>
+/* =========================================================
+   Blood Sweat Monkeys: Cro-Mags Croquet
+   Goofy early-2000s flash-game look, modern CSS polish.
+   ========================================================= */
+
+:root{
+  --sky-top:#8fd4ff;
+  --sky-bot:#c9f2ff;
+  --ink:#2b2115;
+  --cream:#fff6df;
+  --mustard:#f4b53f;
+  --mustard-dark:#c98a1c;
+  --clover:#3f9142;
+  --clover-dark:#296b2c;
+  --berry:#e85d5d;
+  --berry-dark:#b23c3c;
+  --panel:#fffaf0;
+  --shadow-hard:#00000055;
+  font-family:'Trebuchet MS','Segoe UI',Verdana,sans-serif;
+}
+
+*{box-sizing:border-box;}
+
+html,body{
+  margin:0;
+  height:100%;
+  background:linear-gradient(180deg,var(--sky-top),var(--sky-bot));
+  color:var(--ink);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+#game-wrap{
+  position:relative;
+  width:1000px;
+  height:600px;
+  margin:20px auto;
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 20px 50px var(--shadow-hard), 0 0 0 6px var(--cream), 0 0 0 12px var(--mustard-dark);
+}
+
+@media (max-width:1020px){
+  #game-wrap{ width:96vw; height:calc(96vw*0.6); margin:2vh auto; }
+}
+
+canvas#game-canvas{
+  display:block;
+  width:100%;
+  height:100%;
+  image-rendering:optimizeSpeed;
+  background:#79c25a;
+}
+
+.hidden{ display:none !important; }
+
+/* ---------------- Fonts / headline treatment ---------------- */
+.game-title, .screen-title, h2, #hud-course-name{
+  font-family:'Marker Felt','Comic Sans MS','Trebuchet MS',cursive;
+}
+
+/* ================= SCREENS (menus) ================= */
+.screen{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:22px;
+  background:
+    radial-gradient(circle at 20% 15%, #ffffff33, transparent 40%),
+    linear-gradient(160deg,#7fcfff 0%, #bff0ff 45%, #eaffb0 100%);
+  text-align:center;
+  z-index:20;
+  animation:fadeIn .35s ease;
+}
+
+.overlay-screen{
+  background:#1c2b1caa;
+  backdrop-filter:blur(2px);
+}
+
+@keyframes fadeIn{ from{opacity:0; transform:scale(1.02);} to{opacity:1; transform:scale(1);} }
+
+.title-block{ text-align:center; }
+
+.title-eyebrow{
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  font-size:13px;
+  color:var(--clover-dark);
+  font-weight:bold;
+  margin-bottom:4px;
+}
+
+.game-title{
+  font-size:64px;
+  margin:0;
+  color:var(--berry);
+  -webkit-text-stroke:3px var(--ink);
+  text-shadow:5px 5px 0 var(--mustard), 5px 5px 0 3px var(--ink);
+  transform:rotate(-2deg);
+  line-height:1;
+}
+.game-title span{
+  display:block;
+  color:var(--clover);
+  font-size:0.9em;
+  text-shadow:5px 5px 0 var(--cream), 5px 5px 0 3px var(--ink);
+  transform:rotate(1deg);
+  margin-top:4px;
+}
+
+.title-sub{
+  margin-top:10px;
+  font-style:italic;
+  color:var(--ink);
+  opacity:.75;
+}
+
+#screen-menu{
+  background:
+    radial-gradient(circle at 50% 0%, #7a4fa444, transparent 55%),
+    radial-gradient(circle at 15% 85%, #00000022, transparent 45%),
+    radial-gradient(circle at 85% 85%, #00000022, transparent 45%),
+    linear-gradient(160deg, #46658f 0%, #5c8a63 55%, #9fbf5a 100%);
+}
+
+/* ---------------- evil gnome decorations ---------------- */
+.menu-gnomes{ position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+
+.gnome-deco{
+  position:absolute;
+  width:70px; height:98px;
+  animation: gnomeBob 2.6s ease-in-out infinite;
+}
+.gnome-deco .g-hat{
+  position:absolute; top:0; left:8px; width:0; height:0;
+  border-left:27px solid transparent;
+  border-right:27px solid transparent;
+  border-bottom:34px solid var(--hat, #e04b4b);
+  filter: drop-shadow(0 3px 0 rgba(0,0,0,.25));
+}
+.gnome-deco .g-hat::after{
+  content:""; position:absolute; top:-7px; left:19px; width:11px; height:11px;
+  border-radius:50%; background:#f2ede0; box-shadow:0 1px 2px #00000040;
+}
+.gnome-deco .g-brim{
+  position:absolute; top:31px; left:3px; width:64px; height:8px;
+  background:var(--hat-dark,#a83030); border-radius:4px;
+}
+.gnome-deco .g-face{
+  position:absolute; top:26px; left:19px; width:32px; height:27px;
+  background:#e8b48a; border-radius:50%;
+}
+.gnome-deco .g-eye{
+  position:absolute; top:37px; width:6px; height:7px;
+  background:#ff3b3b; border-radius:50%;
+  box-shadow:0 0 7px 2px #ff3b3bcc;
+  animation: gnomeGlow 1.9s ease-in-out infinite;
+}
+.gnome-deco .g-eye.l{ left:23px; }
+.gnome-deco .g-eye.r{ left:37px; animation-delay:.15s; }
+.gnome-deco .g-beard{
+  position:absolute; top:41px; left:13px; width:44px; height:32px;
+  background:#f2ede0; border-radius:0 0 22px 22px;
+  box-shadow:inset 0 -4px 0 #00000010;
+}
+.gnome-deco .g-body{
+  position:absolute; top:58px; left:5px; width:60px; height:42px;
+  background:var(--tunic,#3f9142); border-radius:12px 12px 22px 22px;
+}
+.gnome-deco .g-belt{
+  position:absolute; top:69px; left:5px; width:60px; height:6px; background:#5c3a1a;
+}
+.gnome-deco .g-buckle{
+  position:absolute; top:67px; left:30px; width:10px; height:10px; background:#f4b53f; border-radius:2px;
+}
+.gnome-deco .g-boot{
+  position:absolute; top:92px; width:15px; height:8px; background:#3a2a1a; border-radius:4px;
+}
+.gnome-deco .g-boot.l{ left:9px; }
+.gnome-deco .g-boot.r{ left:46px; }
+
+@keyframes gnomeBob{
+  0%,100%{ transform:translateY(0) rotate(-3deg); }
+  50%{ transform:translateY(-9px) rotate(3deg); }
+}
+@keyframes gnomeGlow{
+  0%,100%{ opacity:1; }
+  50%{ opacity:.35; }
+}
+
+.gnome-left{
+  left:22px; bottom:14px;
+  --hat:#e04b4b; --hat-dark:#a83030; --tunic:#3f9142;
+  transform-origin:bottom center;
+}
+.gnome-right{
+  right:22px; bottom:6px;
+  --hat:#4b7be0; --hat-dark:#2f5aad; --tunic:#8a5a2b;
+  transform:scaleX(-1);
+  animation-delay:.7s;
+}
+.gnome-center-back{
+  left:50%; top:6px;
+  --hat:#9b4be0; --hat-dark:#6a2f9e; --tunic:#3f6e91;
+  transform:translateX(-50%) scale(0.62);
+  opacity:.5;
+  animation-delay:1.2s;
+}
+
+/* ---------------- buttons ---------------- */
+.menu-buttons{ display:flex; gap:16px; }
+.menu-buttons.vertical{ flex-direction:column; align-items:stretch; }
+
+.big-btn{
+  font-family:inherit;
+  font-size:20px;
+  font-weight:bold;
+  color:var(--ink);
+  background:var(--mustard);
+  border:3px solid var(--ink);
+  border-radius:14px;
+  padding:14px 30px;
+  cursor:pointer;
+  box-shadow:0 6px 0 var(--mustard-dark);
+  transition:transform .08s ease, box-shadow .08s ease;
+}
+.big-btn:hover{ transform:translateY(-2px); filter:brightness(1.05); }
+.big-btn:active{ transform:translateY(4px); box-shadow:0 2px 0 var(--mustard-dark); }
+.big-btn.ghost{
+  background:var(--cream);
+  box-shadow:0 6px 0 #c9bd9b;
+}
+.big-btn.ghost:active{ box-shadow:0 2px 0 #c9bd9b; }
+
+/* ---------------- generic content panel ---------------- */
+.panel{
+  background:var(--panel);
+  border:4px solid var(--ink);
+  border-radius:18px;
+  padding:28px 36px;
+  max-width:600px;
+  box-shadow:0 12px 0 var(--shadow-hard);
+}
+.panel h2{ margin-top:0; font-size:32px; color:var(--berry); }
+
+.howto-list{
+  text-align:left;
+  line-height:1.7;
+  font-size:15px;
+  padding-left:20px;
+}
+
+.screen-title{
+  font-size:38px;
+  color:var(--clover-dark);
+  text-shadow:3px 3px 0 var(--cream);
+}
+
+/* ---------------- selection cards ---------------- */
+.card-grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:18px;
+  justify-content:center;
+  max-width:820px;
+}
+
+.card{
+  width:200px;
+  background:var(--panel);
+  border:3px solid var(--ink);
+  border-radius:16px;
+  padding:14px;
+  cursor:pointer;
+  box-shadow:0 6px 0 var(--shadow-hard);
+  transition:transform .1s ease;
+  text-align:center;
+}
+.card:hover{ transform:translateY(-4px) rotate(-1deg); }
+.card:active{ transform:translateY(2px); }
+.card.selected{ outline:4px solid var(--clover); }
+
+.card .card-thumb{
+  width:100%;
+  height:90px;
+  border-radius:10px;
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  color:#fff;
+  font-weight:bold;
+}
+
+.card h3{ margin:4px 0 2px; font-size:18px; }
+.card p{ margin:0; font-size:12px; opacity:.7; }
+
+/* ---------------- score summary ---------------- */
+.score-summary{ margin:14px 0 22px; }
+.score-row{
+  display:flex;
+  justify-content:space-between;
+  padding:6px 4px;
+  border-bottom:1px dashed #00000030;
+  font-size:16px;
+}
+.score-row.total{
+  font-weight:bold;
+  font-size:22px;
+  color:var(--berry-dark);
+  border-bottom:none;
+  margin-top:6px;
+}
+
+/* ================= HUD ================= */
+#hud{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:10;
+  font-weight:bold;
+}
+
+.hud-panel{
+  position:absolute;
+  top:12px;
+  display:flex;
+  gap:16px;
+  background:#fffaf0dd;
+  border:3px solid var(--ink);
+  border-radius:12px;
+  padding:8px 16px;
+  box-shadow:0 4px 0 var(--shadow-hard);
+}
+.hud-left{ left:12px; }
+.hud-right{ right:12px; }
+.hud-center{
+  left:50%;
+  transform:translateX(-50%);
+  font-family:'Marker Felt','Comic Sans MS',cursive;
+  color:var(--clover-dark);
+  font-size:17px;
+}
+
+.hud-item{ display:flex; flex-direction:column; align-items:center; min-width:56px; }
+.hud-label{ font-size:10px; text-transform:uppercase; opacity:.6; letter-spacing:.06em; }
+.hud-item span:last-child{ font-size:18px; }
+
+#pause-btn{
+  position:absolute;
+  top:12px;
+  right:200px;
+  pointer-events:all;
+  width:40px;height:40px;
+  border-radius:50%;
+  border:3px solid var(--ink);
+  background:var(--berry);
+  color:#fff;
+  font-size:16px;
+  cursor:pointer;
+  box-shadow:0 4px 0 var(--berry-dark);
+}
+#pause-btn:active{ transform:translateY(3px); box-shadow:none; }
+
+#effect-tray{
+  position:absolute;
+  bottom:14px;
+  left:12px;
+  display:flex;
+  gap:8px;
+}
+.effect-chip{
+  background:#fffaf0dd;
+  border:2px solid var(--ink);
+  border-radius:8px;
+  padding:5px 10px;
+  font-size:12px;
+  box-shadow:0 3px 0 var(--shadow-hard);
+}
+
+#hint-text{
+  position:absolute;
+  bottom:16px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#000000aa;
+  color:#fff;
+  padding:6px 16px;
+  border-radius:20px;
+  font-size:13px;
+  font-weight:normal;
+  opacity:0;
+  transition:opacity .2s ease;
+  white-space:nowrap;
+}
+#hint-text.show{ opacity:1; }
+
+</style>
+</head>
+<body>
+
+<div id="game-wrap">
+
+  <!-- ===================== CANVAS ===================== -->
+  <canvas id="game-canvas" width="1000" height="600"></canvas>
+
+  <!-- ===================== HUD (in-game) ===================== -->
+  <div id="hud" class="hidden">
+    <div class="hud-panel hud-left">
+      <div class="hud-item"><span class="hud-label">Strokes</span><span id="hud-strokes">0</span></div>
+      <div class="hud-item"><span class="hud-label">Wicket</span><span id="hud-wicket">1 / 6</span></div>
+    </div>
+    <div class="hud-panel hud-center">
+      <div id="hud-course-name">Backyard Practice</div>
+    </div>
+    <div class="hud-panel hud-right">
+      <div class="hud-item"><span class="hud-label">Time</span><span id="hud-time">00:00</span></div>
+      <div class="hud-item"><span class="hud-label">Score</span><span id="hud-score">1000</span></div>
+    </div>
+    <button id="pause-btn" title="Pause">⏸</button>
+    <div id="effect-tray"></div>
+    <div id="hint-text"></div>
+  </div>
+
+  <!-- ===================== MAIN MENU ===================== -->
+  <div id="screen-menu" class="screen">
+    <div class="title-block">
+      <div class="title-eyebrow">Blood Sweat Monkeys presents</div>
+      <h1 class="game-title">BLEVADERE <span>CROQUET</span></h1>
+      <div class="title-sub">a tournament of dubious sportsmanship &amp; vengeful garden gnomes</div>
+    </div>
+    <div class="menu-buttons">
+      <button class="big-btn" id="btn-play">Play</button>
+      <button class="big-btn ghost" id="btn-howto">How to Play</button>
+    </div>
+    <div class="menu-gnomes" aria-hidden="true">
+      <div class="gnome-deco gnome-center-back">
+        <div class="g-hat"></div><div class="g-brim"></div>
+        <div class="g-face"></div><div class="g-eye l"></div><div class="g-eye r"></div>
+        <div class="g-beard"></div><div class="g-body"></div><div class="g-belt"></div><div class="g-buckle"></div>
+        <div class="g-boot l"></div><div class="g-boot r"></div>
+      </div>
+      <div class="gnome-deco gnome-left">
+        <div class="g-hat"></div><div class="g-brim"></div>
+        <div class="g-face"></div><div class="g-eye l"></div><div class="g-eye r"></div>
+        <div class="g-beard"></div><div class="g-body"></div><div class="g-belt"></div><div class="g-buckle"></div>
+        <div class="g-boot l"></div><div class="g-boot r"></div>
+      </div>
+      <div class="gnome-deco gnome-right">
+        <div class="g-hat"></div><div class="g-brim"></div>
+        <div class="g-face"></div><div class="g-eye l"></div><div class="g-eye r"></div>
+        <div class="g-beard"></div><div class="g-body"></div><div class="g-belt"></div><div class="g-buckle"></div>
+        <div class="g-boot l"></div><div class="g-boot r"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== HOW TO PLAY ===================== -->
+  <div id="screen-howto" class="screen hidden">
+    <div class="panel">
+      <h2>How to Play</h2>
+      <ul class="howto-list">
+        <li><b>WASD / Arrows</b> — move your golfer around the course</li>
+        <li><b>Mouse</b> — aim your swing</li>
+        <li><b>Hold Left Click</b> — charge your swing power, release to lock it in</li>
+        <li>Once power is locked, keep moving the mouse to <b>fine-tune your aim</b> before you commit</li>
+        <li><b>Click again</b> to strike the ball</li>
+        <li><b>Right Click or Esc</b> — cancel a shot and start over</li>
+        <li>Get close to the ball before you can swing at it</li>
+        <li>Hit every wicket <b>in order</b>, then finish at the stake</li>
+        <li>Fewer strokes = higher score. Watch the clock!</li>
+        <li>Evil lawn gnomes stalk the course — if your ball sits still too long near one, they'll <b>steal it</b> and you'll have to redo your last wicket</li>
+        <li>Smash a gnome by rolling your ball into it at speed — very satisfying, no penalty</li>
+        <li>Grab power-up icons rolling near your ball for a boost</li>
+      </ul>
+      <button class="big-btn" id="btn-howto-back">Got it</button>
+    </div>
+  </div>
+
+  <!-- ===================== CHARACTER SELECT ===================== -->
+  <div id="screen-character" class="screen hidden">
+    <h2 class="screen-title">Choose Your Golfer</h2>
+    <div id="character-grid" class="card-grid"></div>
+    <button class="big-btn ghost" id="btn-char-back">Back</button>
+  </div>
+
+  <!-- ===================== COURSE SELECT ===================== -->
+  <div id="screen-course" class="screen hidden">
+    <h2 class="screen-title">Choose Your Course</h2>
+    <div id="course-grid" class="card-grid"></div>
+    <button class="big-btn ghost" id="btn-course-back">Back</button>
+  </div>
+
+  <!-- ===================== PAUSE MENU ===================== -->
+  <div id="screen-pause" class="screen overlay-screen hidden">
+    <div class="panel">
+      <h2>Paused</h2>
+      <div class="menu-buttons vertical">
+        <button class="big-btn" id="btn-resume">Resume</button>
+        <button class="big-btn ghost" id="btn-restart">Restart Hole</button>
+        <button class="big-btn ghost" id="btn-quit">Main Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== VICTORY SCREEN ===================== -->
+  <div id="screen-victory" class="screen overlay-screen hidden">
+    <div class="panel">
+      <h2 id="victory-title">Hole Complete!</h2>
+      <div class="score-summary">
+        <div class="score-row"><span>Strokes</span><span id="v-strokes">0</span></div>
+        <div class="score-row"><span>Time</span><span id="v-time">00:00</span></div>
+        <div class="score-row"><span>Gnomes Smashed</span><span id="v-bonks">0</span></div>
+        <div class="score-row total"><span>Final Score</span><span id="v-score">0</span></div>
+      </div>
+      <div class="menu-buttons vertical">
+        <button class="big-btn" id="btn-next-course">Next Course</button>
+        <button class="big-btn ghost" id="btn-replay">Replay Course</button>
+        <button class="big-btn ghost" id="btn-victory-menu">Main Menu</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   AudioManager
+   Every sound is synthesized on the fly with the Web Audio
+   API — no external sound files are used anywhere.
+   ========================================================= */
+
+class AudioManager {
+  constructor() {
+    this.ctx = null;
+    this.muted = false;
+    this._rollSource = null;
+    this._rollGain = null;
+    this.musicPlaying = false;
+    this._musicInterval = null;
+  }
+
+  // Lazily create the AudioContext on first user gesture (browser policy).
+  _ensureCtx() {
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AC();
+      this._musicGain = this.ctx.createGain();
+      this._musicGain.gain.value = 0.22;
+      this._musicGain.connect(this.ctx.destination);
+    }
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    return this.ctx;
+  }
+
+  // Looping procedural "action" backing track — a driving bass riff
+  // with a kick and hi-hat, scheduled step by step. No audio files.
+  startMusic() {
+    if (this.musicPlaying) return;
+    this._ensureCtx();
+    this.musicPlaying = true;
+    this.musicStep = 0;
+    const bassNotes = [110, 110, 130.81, 110, 146.83, 130.81, 110, 98];
+    const stepMs = 145;
+
+    this._musicInterval = setInterval(() => {
+      if (this.muted || !this.ctx) return;
+      const ctx = this.ctx;
+      const t0 = ctx.currentTime;
+      const step = this.musicStep % 8;
+
+      // driving bass note
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sawtooth';
+      o.frequency.value = bassNotes[step];
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'lowpass';
+      filt.frequency.value = 480;
+      this._env(g, t0, 0.004, 0.11, 0.11);
+      o.connect(filt).connect(g).connect(this._musicGain);
+      o.start(t0);
+      o.stop(t0 + 0.13);
+
+      // hi-hat on off-beats
+      if (step % 2 === 1) {
+        const noise = this._noiseBuffer(0.04);
+        const src = ctx.createBufferSource();
+        src.buffer = noise;
+        const hf = ctx.createBiquadFilter();
+        hf.type = 'highpass';
+        hf.frequency.value = 6000;
+        const hg = ctx.createGain();
+        this._env(hg, t0, 0.001, 0.03, 0.06);
+        src.connect(hf).connect(hg).connect(this._musicGain);
+        src.start(t0);
+      }
+
+      // kick every downbeat
+      if (step % 4 === 0) {
+        const ko = ctx.createOscillator();
+        const kg = ctx.createGain();
+        ko.type = 'sine';
+        ko.frequency.setValueAtTime(150, t0);
+        ko.frequency.exponentialRampToValueAtTime(48, t0 + 0.12);
+        this._env(kg, t0, 0.001, 0.16, 0.4);
+        ko.connect(kg).connect(this._musicGain);
+        ko.start(t0);
+        ko.stop(t0 + 0.18);
+      }
+
+      this.musicStep++;
+    }, stepMs);
+  }
+
+  stopMusic() {
+    if (this._musicInterval) { clearInterval(this._musicInterval); this._musicInterval = null; }
+    this.musicPlaying = false;
+  }
+
+  _env(gainNode, t0, attack, decay, peak) {
+    gainNode.gain.cancelScheduledValues(t0);
+    gainNode.gain.setValueAtTime(0.0001, t0);
+    gainNode.gain.exponentialRampToValueAtTime(peak, t0 + attack);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, t0 + attack + decay);
+  }
+
+  // Short percussive swing "whoosh"
+  playSwing(power = 1) {
+    if (this.muted) return;
+    const ctx = this._ensureCtx();
+    const t0 = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220 + power * 260, t0);
+    osc.frequency.exponentialRampToValueAtTime(80, t0 + 0.18);
+    this._env(gain, t0, 0.01, 0.18, 0.18 * power + 0.05);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.22);
+  }
+
+  // Ball being struck — a crisp "tok"
+  playHit(power = 1) {
+    if (this.muted) return;
+    const ctx = this._ensureCtx();
+    const t0 = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(900, t0);
+    osc.frequency.exponentialRampToValueAtTime(180, t0 + 0.09);
+    this._env(gain, t0, 0.002, 0.1, 0.35 + power * 0.3);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.12);
+
+    // click transient
+    const noise = this._noiseBuffer(0.03);
+    const noiseSrc = ctx.createBufferSource();
+    noiseSrc.buffer = noise;
+    const ng = ctx.createGain();
+    this._env(ng, t0, 0.001, 0.03, 0.25);
+    noiseSrc.connect(ng).connect(ctx.destination);
+    noiseSrc.start(t0);
+  }
+
+  // Continuous soft rolling sound while ball moves — call start/update/stop
+  startRoll() {
+    if (this.muted || this._rollSource) return;
+    const ctx = this._ensureCtx();
+    const buf = this._noiseBuffer(1, true);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 500;
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+    src.connect(filter).connect(gain).connect(ctx.destination);
+    src.start();
+    this._rollSource = src;
+    this._rollGain = gain;
+    this._rollFilter = filter;
+  }
+  updateRoll(speedFraction) {
+    if (!this._rollGain) return;
+    const t = this.ctx.currentTime;
+    this._rollGain.gain.setTargetAtTime(Math.min(0.12, speedFraction * 0.14), t, 0.05);
+    this._rollFilter.frequency.setTargetAtTime(300 + speedFraction * 900, t, 0.08);
+  }
+  stopRoll() {
+    if (!this._rollSource) return;
+    const t = this.ctx.currentTime;
+    this._rollGain.gain.setTargetAtTime(0.0001, t, 0.05);
+    const src = this._rollSource;
+    setTimeout(() => { try { src.stop(); } catch (e) {} }, 200);
+    this._rollSource = null;
+    this._rollGain = null;
+  }
+
+  // Ascending chime for wicket completion
+  playWicket() {
+    if (this.muted) return;
+    const ctx = this._ensureCtx();
+    const notes = [523.25, 659.25, 783.99];
+    notes.forEach((f, i) => {
+      const t0 = ctx.currentTime + i * 0.09;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = f;
+      this._env(gain, t0, 0.005, 0.25, 0.25);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t0);
+      osc.stop(t0 + 0.3);
+    });
+  }
+
+  // Silly cartoon "boink" (legacy — kept for light bumps)
+  playBonk() {
+    if (this.muted) return;
+    const ctx = this._ensureCtx();
+    const t0 = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(140, t0);
+    osc.frequency.exponentialRampToValueAtTime(500, t0 + 0.09);
+    osc.frequency.exponentialRampToValueAtTime(90, t0 + 0.2);
+    this._env(gain, t0, 0.01, 0.22, 0.3);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.25);
+  }
+
+  // Ceramic-gnome SMASH — noise crash + glassy clinks
+  playSmash() {
+    if (this.muted) return;
+    const ctx = this._ensureCtx();
+    const t0 = ctx.currentTime;
+
+    const noise = this._noiseBuffer(0.25);
+    const src = ctx.createBufferSource();
+    src.buffer = noise;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.value = 700;
+    const gain = ctx.createGain();
+    this._env(gain, t0, 0.001, 0.2, 0.5);
+    src.connect(filter).connect(gain).connect(ctx.destination);
+    src.start(t0);
+
+    [1200, 1800, 2500].forEach((f, i) => {
+      const t1 = t0 + i * 0.02;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'square';
+      o.frequency.value = f;
+      this._env(g, t1, 0.001, 0.12, 0.12);
+      o.connect(g).connect(ctx.destination);
+      o.start(t1);
+      o.stop(t1 + 0.15);
+    });
+  }
+
+  // Comedic high-pitched gnome SCREAM when smashed
+  playScream() {
+    if (this.muted) return;
+    const ctx = this._ensureCtx();
+    const t0 = ctx.currentTime + 0.05;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(320, t0);
+    osc.frequency.exponentialRampToValueAtTime(1150, t0 + 0.12);
+    osc.frequency.exponentialRampToValueAtTime(220, t0 + 0.34);
+    this._env(gain, t0, 0.005, 0.36, 0.26);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.4);
+  }
+
+  // Sneaky descending "swipe" when a gnome steals the ball
+  playSteal() {
+    if (this.muted) return;
+    const ctx = this._ensureCtx();
+    const t0 = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(200, t0);
+    osc.frequency.exponentialRampToValueAtTime(90, t0 + 0.12);
+    osc.frequency.exponentialRampToValueAtTime(240, t0 + 0.24);
+    osc.frequency.exponentialRampToValueAtTime(70, t0 + 0.42);
+    this._env(gain, t0, 0.01, 0.45, 0.22);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.46);
+  }
+
+  // Victory fanfare arpeggio
+  playVictory() {
+    if (this.muted) return;
+    const ctx = this._ensureCtx();
+    const notes = [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5];
+    notes.forEach((f, i) => {
+      const t0 = ctx.currentTime + i * 0.13;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = f;
+      this._env(gain, t0, 0.01, 0.3, 0.3);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t0);
+      osc.stop(t0 + 0.35);
+    });
+  }
+
+  // Soft bloop for power-up pickup
+  playPowerUp() {
+    if (this.muted) return;
+    const ctx = this._ensureCtx();
+    const t0 = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(400, t0);
+    osc.frequency.exponentialRampToValueAtTime(1000, t0 + 0.15);
+    this._env(gain, t0, 0.01, 0.2, 0.25);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.22);
+  }
+
+  // Soft splash / squelch for water & mud
+  playSquelch() {
+    if (this.muted) return;
+    const ctx = this._ensureCtx();
+    const t0 = ctx.currentTime;
+    const noise = this._noiseBuffer(0.2);
+    const src = ctx.createBufferSource();
+    src.buffer = noise;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 700;
+    const gain = ctx.createGain();
+    this._env(gain, t0, 0.01, 0.2, 0.2);
+    src.connect(filter).connect(gain).connect(ctx.destination);
+    src.start(t0);
+  }
+
+  // UI click
+  playClick() {
+    if (this.muted) return;
+    const ctx = this._ensureCtx();
+    const t0 = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = 600;
+    this._env(gain, t0, 0.001, 0.06, 0.12);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.07);
+  }
+
+  _noiseBuffer(duration, whiteSoft) {
+    const ctx = this._ensureCtx();
+    const len = Math.max(1, Math.floor(ctx.sampleRate * duration));
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < len; i++) {
+      const white = Math.random() * 2 - 1;
+      if (whiteSoft) {
+        last = (last + 0.05 * white) / 1.05;
+        data[i] = last * 3;
+      } else {
+        data[i] = white;
+      }
+    }
+    return buf;
+  }
+}
+
+const AUDIO = new AudioManager();
+
+
+/* =========================================================
+   Lightweight particle system for juice: dirt kicks,
+   confetti, sparkles, splashes.
+   ========================================================= */
+
+class Particle {
+  constructor(x, y, vx, vy, color, life, size, gravity = 0, shape = 'circle') {
+    this.x = x; this.y = y;
+    this.vx = vx; this.vy = vy;
+    this.color = color;
+    this.life = life;
+    this.maxLife = life;
+    this.size = size;
+    this.gravity = gravity;
+    this.shape = shape;
+    this.rot = Math.random() * Math.PI * 2;
+    this.vrot = (Math.random() - 0.5) * 8;
+  }
+  update(dt) {
+    this.vy += this.gravity * dt;
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+    this.rot += this.vrot * dt;
+    this.life -= dt;
+    return this.life > 0;
+  }
+  draw(ctx) {
+    const t = Math.max(0, this.life / this.maxLife);
+    ctx.save();
+    ctx.globalAlpha = t;
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rot);
+    ctx.fillStyle = this.color;
+    if (this.shape === 'rect') {
+      ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+    } else {
+      ctx.beginPath();
+      ctx.arc(0, 0, this.size * t, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+class ParticleSystem {
+  constructor() {
+    this.particles = [];
+  }
+
+  update(dt) {
+    this.particles = this.particles.filter(p => p.update(dt));
+  }
+
+  draw(ctx) {
+    for (const p of this.particles) p.draw(ctx);
+  }
+
+  burst(x, y, color, count = 10, opts = {}) {
+    const { speed = 90, life = 0.5, size = 3, gravity = 220, shape = 'circle' } = opts;
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const s = speed * (0.4 + Math.random() * 0.8);
+      this.particles.push(new Particle(
+        x, y, Math.cos(a) * s, Math.sin(a) * s - s * 0.3,
+        color, life * (0.6 + Math.random() * 0.8), size * (0.6 + Math.random()), gravity, shape
+      ));
+    }
+  }
+
+  confetti(x, y, count = 40) {
+    const colors = ['#e85d5d', '#f4b53f', '#3f9142', '#5da9f4', '#c869e8', '#fff6df'];
+    for (let i = 0; i < count; i++) {
+      const a = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI;
+      const s = 140 + Math.random() * 160;
+      this.particles.push(new Particle(
+        x, y, Math.cos(a) * s, Math.sin(a) * s,
+        colors[i % colors.length], 1.2 + Math.random() * 0.8, 4 + Math.random() * 3, 260, 'rect'
+      ));
+    }
+  }
+
+  dust(x, y, color = '#c9a86b') {
+    this.burst(x, y, color, 6, { speed: 40, life: 0.4, size: 2.5, gravity: 60 });
+  }
+
+  splash(x, y, color = '#7fd0ff') {
+    this.burst(x, y, color, 8, { speed: 70, life: 0.45, size: 2.5, gravity: 180 });
+  }
+
+  sparkle(x, y, color = '#fff59a') {
+    this.burst(x, y, color, 8, { speed: 60, life: 0.5, size: 2, gravity: -20 });
+  }
+}
+
+
+/* =========================================================
+   Entities: Ball (physics), Player, Belvadere (wandering
+   creature AI), PowerUp.
+   ========================================================= */
+
+const COURSE_W = 1000;
+const COURSE_H = 600;
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function rand(a, b) { return a + Math.random() * (b - a); }
+function dist(x1, y1, x2, y2) { return Math.hypot(x2 - x1, y2 - y1); }
+
+// Pushes any circular entity (player, gnome) out of solid obstacles
+// (trees, rocks, bushes, fences) and clamps it inside the course
+// bounds. Terrain zones (mud/sand) and gopher holes are not solid
+// and are ignored. Pass excludeObstacle to let a gnome overlap the
+// one specific tree/hole it's currently hiding at.
+function pushOutOfObstacles(entity, course, radius, excludeObstacle) {
+  for (const obs of course.obstacles) {
+    if (obs === excludeObstacle) continue;
+    if (obs.type === 'gopherhole') continue;
+    if (obs.type === 'fence') {
+      const cx = clamp(entity.x, obs.x, obs.x + obs.w);
+      const cy = clamp(entity.y, obs.y, obs.y + obs.h);
+      const dx = entity.x - cx, dy = entity.y - cy;
+      const d = Math.hypot(dx, dy);
+      if (d < radius && d > 0.0001) {
+        const nx = dx / d, ny = dy / d;
+        const overlap = radius - d;
+        entity.x += nx * overlap; entity.y += ny * overlap;
+      } else if (d <= 0.0001) {
+        entity.x += radius; // degenerate case: nudge out
+      }
+    } else if (obs.type !== 'mud' && obs.type !== 'sand') {
+      const d = dist(entity.x, entity.y, obs.x, obs.y);
+      const minD = radius + obs.r * 0.85;
+      if (d < minD && d > 0.0001) {
+        const nx = (entity.x - obs.x) / d, ny = (entity.y - obs.y) / d;
+        const overlap = minD - d;
+        entity.x += nx * overlap; entity.y += ny * overlap;
+      }
+    }
+  }
+  entity.x = clamp(entity.x, radius, COURSE_W - radius);
+  entity.y = clamp(entity.y, radius, COURSE_H - radius);
+}
+
+// ---------------------------------------------------------
+// BALL
+// ---------------------------------------------------------
+class Ball {
+  constructor(x, y) {
+    this.x = x; this.y = y;
+    this.vx = 0; this.vy = 0;
+    this.radius = 8;
+    this.moving = false;
+    this.curveForce = 0;   // lateral accel from Curve Ball power-up
+    this.luckyBounce = false; // next collision has restitution 1
+    this.trail = [];
+    this.inWater = false;      // currently inside a wet terrain zone (not on a bridge)
+    this.waterEntryX = null;   // where it first went in — sent back here if it stalls in the water
+    this.waterEntryY = null;
+    this.hazardTriggered = false; // one-shot flag Game reads to show a hint
+  }
+
+  get speed() { return Math.hypot(this.vx, this.vy); }
+
+  launch(dx, dy, power) {
+    this.vx = dx * power;
+    this.vy = dy * power;
+  }
+
+  update(dt, course, particles) {
+    const wasMoving = this.speed > 4;
+
+    // trail for a subtle motion streak
+    if (wasMoving) {
+      this.trail.push({ x: this.x, y: this.y });
+      if (this.trail.length > 8) this.trail.shift();
+    } else if (this.trail.length) {
+      this.trail.shift();
+    }
+
+    // terrain friction — bridges override any hazard beneath them,
+    // letting the ball roll across water/mud like normal grass.
+    let onBridge = false;
+    if (course.bridges) {
+      for (const br of course.bridges) {
+        if (this.x > br.x && this.x < br.x + br.w && this.y > br.y && this.y < br.y + br.h) { onBridge = true; break; }
+      }
+    }
+    let friction = 0.986; // baseline grass, per-frame @ ~60fps reference
+    let onTerrain = null;
+    if (!onBridge) {
+      for (const zone of course.terrain) {
+        if (this.x > zone.x && this.x < zone.x + zone.w && this.y > zone.y && this.y < zone.y + zone.h) {
+          friction = zone.friction;
+          onTerrain = zone;
+          break;
+        }
+      }
+    }
+    // normalize friction to dt (assuming baseline tuned at 1/60)
+    const fpow = Math.pow(friction, dt * 60);
+    this.vx *= fpow;
+    this.vy *= fpow;
+
+    // curve ball lateral force
+    if (Math.abs(this.curveForce) > 0.01 && this.speed > 5) {
+      const angle = Math.atan2(this.vy, this.vx) + Math.PI / 2;
+      this.vx += Math.cos(angle) * this.curveForce * dt;
+      this.vy += Math.sin(angle) * this.curveForce * dt;
+      this.curveForce *= 0.985;
+    }
+
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+
+    // squelch sound once when entering mud/sand/water while moving fast
+    if (onTerrain && onTerrain.wet && this.speed > 60 && !this._wetFlag) {
+      AUDIO.playSquelch();
+      particles.splash(this.x, this.y, onTerrain.particleColor);
+      this._wetFlag = true;
+    } else if (!onTerrain || !onTerrain.wet) {
+      this._wetFlag = false;
+    }
+
+    // Water hazard tracking: remember exactly where the ball first
+    // crossed into the water so it can be fished back out if it
+    // stalls before making it across.
+    const inWaterZone = !!(onTerrain && onTerrain.wet);
+    if (inWaterZone && !this.inWater) {
+      this.inWater = true;
+      this.waterEntryX = this.x;
+      this.waterEntryY = this.y;
+    } else if (!inWaterZone && this.inWater) {
+      this.inWater = false; // made it across (or was rescued already)
+    }
+
+    // world bounds
+    const r = this.radius;
+    const restitution = this.luckyBounce ? 1 : 0.72;
+    if (this.x < r) { this.x = r; this.vx = -this.vx * restitution; this._bounced(particles); }
+    if (this.x > COURSE_W - r) { this.x = COURSE_W - r; this.vx = -this.vx * restitution; this._bounced(particles); }
+    if (this.y < r) { this.y = r; this.vy = -this.vy * restitution; this._bounced(particles); }
+    if (this.y > COURSE_H - r) { this.y = COURSE_H - r; this.vy = -this.vy * restitution; this._bounced(particles); }
+
+    // obstacle collisions
+    for (const obs of course.obstacles) {
+      if (obs.type === 'gopherhole') continue;
+      if (obs.type === 'fence') {
+        this._resolveRect(obs, particles);
+      } else {
+        this._resolveCircle(obs, particles);
+      }
+    }
+
+    // wicket posts act as thin poles
+    for (const w of course.wickets) {
+      for (const post of w.postWorld) {
+        this._resolveCircle({ x: post.x, y: post.y, r: 5, restitution: 0.75 }, particles);
+      }
+    }
+
+    if (this.speed < 3) { this.vx = 0; this.vy = 0; this.moving = false; }
+    else this.moving = true;
+
+    // Stalled out in the water — it's a hazard, so fish it back out
+    // to wherever it first went in.
+    if (!this.moving && this.inWater) {
+      this.x = this.waterEntryX;
+      this.y = this.waterEntryY;
+      this.vx = 0; this.vy = 0;
+      this.inWater = false;
+      this.hazardTriggered = true;
+      this.trail = [];
+      AUDIO.playSquelch();
+      particles.splash(this.x, this.y, '#7fd0ff');
+    }
+  }
+
+  _bounced(particles) {
+    if (this.luckyBounce) { this.luckyBounce = false; }
+    particles.dust(this.x, this.y, '#ffffffcc');
+  }
+
+  _resolveCircle(obs, particles) {
+    const dx = this.x - obs.x, dy = this.y - obs.y;
+    const d = Math.hypot(dx, dy);
+    const minD = this.radius + obs.r;
+    if (d < minD && d > 0.0001) {
+      const nx = dx / d, ny = dy / d;
+      const overlap = minD - d;
+      this.x += nx * overlap;
+      this.y += ny * overlap;
+      const dot = this.vx * nx + this.vy * ny;
+      const restitution = this.luckyBounce ? 1 : (obs.restitution ?? 0.7);
+      this.vx -= (1 + restitution) * dot * nx;
+      this.vy -= (1 + restitution) * dot * ny;
+      if (dot < -20) this._bounced(particles);
+    }
+  }
+
+  _resolveRect(rect, particles) {
+    const cx = clamp(this.x, rect.x, rect.x + rect.w);
+    const cy = clamp(this.y, rect.y, rect.y + rect.h);
+    const dx = this.x - cx, dy = this.y - cy;
+    let d = Math.hypot(dx, dy);
+    if (d < this.radius) {
+      let nx, ny;
+      if (d < 0.0001) {
+        // center inside rect: push out along shortest axis
+        const left = this.x - rect.x, right = rect.x + rect.w - this.x;
+        const top = this.y - rect.y, bottom = rect.y + rect.h - this.y;
+        const m = Math.min(left, right, top, bottom);
+        if (m === left) { nx = -1; ny = 0; }
+        else if (m === right) { nx = 1; ny = 0; }
+        else if (m === top) { nx = 0; ny = -1; }
+        else { nx = 0; ny = 1; }
+        d = 0;
+      } else {
+        nx = dx / d; ny = dy / d;
+      }
+      const overlap = this.radius - d;
+      this.x += nx * overlap;
+      this.y += ny * overlap;
+      const dot = this.vx * nx + this.vy * ny;
+      const restitution = this.luckyBounce ? 1 : (rect.restitution ?? 0.7);
+      this.vx -= (1 + restitution) * dot * nx;
+      this.vy -= (1 + restitution) * dot * ny;
+      if (dot < -20) this._bounced(particles);
+    }
+  }
+
+  draw(ctx) {
+    // trail
+    for (let i = 0; i < this.trail.length; i++) {
+      const t = this.trail[i];
+      ctx.globalAlpha = (i / this.trail.length) * 0.25;
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, this.radius * 0.7, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // shadow
+    ctx.beginPath();
+    ctx.ellipse(this.x, this.y + 3, this.radius * 0.9, this.radius * 0.5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#00000030';
+    ctx.fill();
+
+    // ball
+    const grad = ctx.createRadialGradient(this.x - 3, this.y - 3, 1, this.x, this.y, this.radius);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(1, '#dcdcdc');
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#00000030';
+    ctx.stroke();
+  }
+}
+
+// ---------------------------------------------------------
+// PLAYER
+// ---------------------------------------------------------
+class Player {
+  constructor(x, y, character) {
+    this.x = x; this.y = y;
+    this.character = character; // {name, shirt, skin}
+    this.radius = 13;
+    this.speed = 155;
+    this.facing = 0; // radians
+    this.walkCycle = 0;
+    this.moving = false;
+  }
+
+  update(dt, keys, course, aimAngle) {
+    let dx = 0, dy = 0;
+    if (keys['w'] || keys['arrowup']) dy -= 1;
+    if (keys['s'] || keys['arrowdown']) dy += 1;
+    if (keys['a'] || keys['arrowleft']) dx -= 1;
+    if (keys['d'] || keys['arrowright']) dx += 1;
+
+    this.moving = dx !== 0 || dy !== 0;
+    if (this.moving) {
+      const len = Math.hypot(dx, dy);
+      dx /= len; dy /= len;
+      this.x += dx * this.speed * dt;
+      this.y += dy * this.speed * dt;
+      this.walkCycle += dt * 9;
+    }
+    if (aimAngle !== null) this.facing = aimAngle;
+
+    this.x = clamp(this.x, this.radius, COURSE_W - this.radius);
+    this.y = clamp(this.y, this.radius, COURSE_H - this.radius);
+
+    // gentle push-out from solid obstacles so the player can't walk through them
+    for (const obs of course.obstacles) {
+      if (obs.type === 'fence') {
+        const cx = clamp(this.x, obs.x, obs.x + obs.w);
+        const cy = clamp(this.y, obs.y, obs.y + obs.h);
+        const ddx = this.x - cx, ddy = this.y - cy;
+        const d = Math.hypot(ddx, ddy);
+        if (d < this.radius && d > 0.0001) {
+          const nx = ddx / d, ny = ddy / d;
+          const overlap = this.radius - d;
+          this.x += nx * overlap; this.y += ny * overlap;
+        }
+      } else if (obs.type !== 'mud' && obs.type !== 'sand' && obs.type !== 'gopherhole') {
+        const d = dist(this.x, this.y, obs.x, obs.y);
+        const minD = this.radius + obs.r * 0.8;
+        if (d < minD && d > 0.0001) {
+          const nx = (this.x - obs.x) / d, ny = (this.y - obs.y) / d;
+          const overlap = minD - d;
+          this.x += nx * overlap; this.y += ny * overlap;
+        }
+      }
+    }
+  }
+
+  draw(ctx) {
+    const c = this.character;
+    ctx.save();
+    ctx.translate(this.x, this.y);
+
+    // shadow
+    ctx.beginPath();
+    ctx.ellipse(0, this.radius * 0.9, this.radius * 0.9, this.radius * 0.4, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#00000030';
+    ctx.fill();
+
+    const bob = this.moving ? Math.sin(this.walkCycle) * 2 : 0;
+    ctx.translate(0, bob);
+
+    // legs
+    ctx.fillStyle = c.pants;
+    const legOff = this.moving ? Math.sin(this.walkCycle) * 4 : 0;
+    ctx.fillRect(-7, 4 + legOff * 0.3, 5, 9);
+    ctx.fillRect(2, 4 - legOff * 0.3, 5, 9);
+
+    // body (shirt)
+    ctx.beginPath();
+    ctx.ellipse(0, -2, 12, 13, 0, 0, Math.PI * 2);
+    ctx.fillStyle = c.shirt;
+    ctx.fill();
+    ctx.strokeStyle = '#00000025';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // head
+    ctx.beginPath();
+    ctx.arc(0, -18, 9, 0, Math.PI * 2);
+    ctx.fillStyle = c.skin;
+    ctx.fill();
+
+    // hair / hat personality
+    ctx.fillStyle = c.hair;
+    ctx.beginPath();
+    ctx.arc(0, -21, 9.2, Math.PI, Math.PI * 2);
+    ctx.fill();
+
+    // face direction indicator (simple eyes toward aim)
+    const ex = Math.cos(this.facing) * 3.5;
+    const ey = Math.sin(this.facing) * 3.5;
+    ctx.fillStyle = '#2b2115';
+    ctx.beginPath();
+    ctx.arc(ex - 1.5, -18 + ey, 1.3, 0, Math.PI * 2);
+    ctx.arc(ex + 3.5, -18 + ey, 1.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // name tag
+    ctx.restore();
+    ctx.font = 'bold 11px Trebuchet MS';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#00000090';
+    ctx.fillText(c.name, this.x, this.y - 34);
+
+    // mallet, oriented toward aim
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.facing);
+    ctx.strokeStyle = '#8a5a2b';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(10, 0);
+    ctx.lineTo(26, 0);
+    ctx.stroke();
+    ctx.fillStyle = '#5c3a1a';
+    ctx.fillRect(24, -3, 6, 6);
+    ctx.restore();
+  }
+}
+
+// Finds a nearby tree or gopher hole a gnome can sneak off to hide at.
+function findHideSpot(gnome, course) {
+  if (!course || !course.obstacles) return null;
+  const candidates = course.obstacles.filter(
+    (o) => (o.type === 'tree' || o.type === 'gopherhole') && dist(gnome.x, gnome.y, o.x, o.y) < 260
+  );
+  if (!candidates.length) return null;
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+// ---------------------------------------------------------
+// BELVADERE — evil wandering lawn gnome
+//   States: idle | walking | staring | approaching_hide |
+//           peeking | stalking | broken
+//   - approaching_hide/peeking: the gnome sneaks off to a nearby
+//     tree or gopher hole and peers out from behind/inside it
+//   - stalking is driven externally by Game (it targets the
+//     stationary ball and, if it closes the distance, grabs it)
+//   - broken happens when the ball smashes into it at speed
+// ---------------------------------------------------------
+class Belvadere {
+  constructor(x, y, hue) {
+    this.x = x; this.y = y;
+    this.radius = 13;
+    this.speed = rand(26, 46);
+    this.state = 'idle'; // idle | walking | staring | approaching_hide | peeking | stalking | broken
+    this.timer = rand(0.5, 2);
+    this.targetX = x; this.targetY = y;
+    this.hatHue = hue;           // pointy hat color varies per gnome
+    this.tunicHue = rand(90, 210); // green/blue tunic variety
+    this.down = false;           // true while broken/reforming
+    this.downTimer = 0;
+    this.bobPhase = Math.random() * 10;
+    this.blinkTimer = rand(1, 4);
+    this.blink = false;
+    this.grabTimer = 0;          // windup once adjacent to the ball while stalking
+    this.grabCooldown = 0;       // brief immunity after a steal or respawn
+    this.shards = [];            // rubble left behind while broken
+
+    // hide & peek behavior
+    this.hideTarget = null;      // the obstacle (tree/hole) being used
+    this.hideKind = null;        // 'tree' | 'hole'
+    this.hideSide = 1;           // which side of a tree it peeks from
+    this.hidePoint = null;
+    this.peekDuration = 0;
+    this.peekTimer = 0;
+    this.peekElapsed = 0;
+    this.peekAmount = 0;         // 0 = fully hidden, 1 = fully peeking out
+  }
+
+  // Ball smashed into this gnome at speed — it shatters.
+  knockOver(particles) {
+    if (this.down) return;
+    this.down = true;
+    this.state = 'broken';
+    this.downTimer = rand(4, 6);
+    this.grabTimer = 0;
+    AUDIO.playSmash();
+    AUDIO.playScream();
+    const hatColor = `hsl(${this.hatHue},70%,50%)`;
+    const tunicColor = `hsl(${this.tunicHue},45%,42%)`;
+    particles.burst(this.x, this.y - 6, hatColor, 8, { speed: 130, life: 0.6, size: 3.5, shape: 'rect' });
+    particles.burst(this.x, this.y, tunicColor, 8, { speed: 100, life: 0.55, size: 3, shape: 'rect' });
+    particles.burst(this.x, this.y, '#f2e6c9', 6, { speed: 90, life: 0.5, size: 2.5, shape: 'rect' });
+  }
+
+  update(dt, particles, course) {
+    this.bobPhase += dt * 4;
+    if (this.grabCooldown > 0) this.grabCooldown -= dt;
+    this.blinkTimer -= dt;
+    if (this.blinkTimer <= 0) { this.blink = true; this.blinkTimer = rand(2, 5); setTimeout(() => this.blink = false, 150); }
+
+    if (this.down) {
+      this.downTimer -= dt;
+      if (this.downTimer <= 0) {
+        this.down = false;
+        this.state = 'idle';
+        this.timer = rand(0.5, 1.5);
+        this.grabCooldown = rand(2, 3.5);
+        // Reform at the center of the map rather than where it broke.
+        this.x = COURSE_W / 2 + rand(-50, 50);
+        this.y = COURSE_H / 2 + rand(-50, 50);
+        if (course) pushOutOfObstacles(this, course, this.radius);
+      }
+      return;
+    }
+
+    // 'stalking' is fully controlled by Game.update — just skip the
+    // normal wander timer so it doesn't fight the external targeting.
+    if (this.state === 'stalking') return;
+
+    this.timer -= dt;
+
+    if (this.state === 'idle' && this.timer <= 0) {
+      const roll = Math.random();
+      const spot = roll < 0.4 && course ? findHideSpot(this, course) : null;
+      if (roll < 0.22) {
+        this.state = 'staring';
+        this.timer = rand(1, 2.5);
+      } else if (spot) {
+        this.hideTarget = spot;
+        this.hideKind = spot.type === 'tree' ? 'tree' : 'hole';
+        if (this.hideKind === 'tree') {
+          this.hideSide = Math.random() < 0.5 ? -1 : 1;
+          this.hidePoint = { x: spot.x + this.hideSide * spot.r * 0.6, y: spot.y + spot.r * 0.3 };
+        } else {
+          this.hidePoint = { x: spot.x, y: spot.y };
+        }
+        this.state = 'approaching_hide';
+        this.timer = 6; // safety timeout in case it can't quite reach the spot
+      } else {
+        this.state = 'walking';
+        this.targetX = clamp(this.x + rand(-160, 160), 40, COURSE_W - 40);
+        this.targetY = clamp(this.y + rand(-160, 160), 40, COURSE_H - 40);
+        this.timer = rand(2.5, 5);
+      }
+    } else if (this.state === 'staring' && this.timer <= 0) {
+      this.state = 'idle';
+      this.timer = rand(0.5, 1.5);
+    } else if (this.state === 'walking') {
+      const d = dist(this.x, this.y, this.targetX, this.targetY);
+      if (d < 4 || this.timer <= 0) {
+        this.state = 'idle';
+        this.timer = rand(0.4, 1.5);
+      } else {
+        const nx = (this.targetX - this.x) / d, ny = (this.targetY - this.y) / d;
+        this.x += nx * this.speed * dt;
+        this.y += ny * this.speed * dt;
+      }
+    } else if (this.state === 'approaching_hide') {
+      const d = dist(this.x, this.y, this.hidePoint.x, this.hidePoint.y);
+      if (d < 6) {
+        this.state = 'peeking';
+        this.peekDuration = rand(1.8, 3.2);
+        this.peekTimer = this.peekDuration;
+        this.peekElapsed = 0;
+      } else if (this.timer <= 0) {
+        // couldn't get there in time — give up and wander instead
+        this.state = 'idle';
+        this.timer = rand(0.4, 1.2);
+        this.hideTarget = null;
+        this.hideKind = null;
+      } else {
+        const nx = (this.hidePoint.x - this.x) / d, ny = (this.hidePoint.y - this.y) / d;
+        this.x += nx * this.speed * 0.85 * dt;
+        this.y += ny * this.speed * 0.85 * dt;
+      }
+    } else if (this.state === 'peeking') {
+      this.peekTimer -= dt;
+      this.peekElapsed += dt;
+      const riseDur = 0.3, fallDur = 0.3;
+      let amt;
+      if (this.peekElapsed < riseDur) amt = this.peekElapsed / riseDur;
+      else if (this.peekTimer < fallDur) amt = this.peekTimer / fallDur;
+      else amt = 1;
+      this.peekAmount = clamp(amt, 0, 1) * (0.88 + 0.12 * Math.sin(this.bobPhase * 1.4));
+      if (this.peekTimer <= 0) {
+        this.state = 'idle';
+        this.timer = rand(0.6, 1.6);
+        this.hideTarget = null;
+        this.hideKind = null;
+        this.peekAmount = 0;
+      }
+    }
+
+    // Let a gnome overlap the one obstacle it's specifically hiding at.
+    const exclude = (this.state === 'approaching_hide' || this.state === 'peeking') ? this.hideTarget : null;
+    if (course) pushOutOfObstacles(this, course, this.radius, exclude);
+  }
+
+  draw(ctx) {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+
+    // shadow
+    ctx.beginPath();
+    ctx.ellipse(0, this.radius * 0.85, this.radius, this.radius * 0.4, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#00000030';
+    ctx.fill();
+
+    const hatColor = `hsl(${this.hatHue},70%,50%)`;
+    const hatShadow = `hsl(${this.hatHue},65%,38%)`;
+    const tunicColor = `hsl(${this.tunicHue},45%,42%)`;
+    const tunicShadow = `hsl(${this.tunicHue},45%,32%)`;
+
+    if (this.down) {
+      // shattered pieces lying in the grass
+      ctx.rotate(0.3);
+      ctx.globalAlpha = 0.95;
+      ctx.fillStyle = tunicColor;
+      ctx.beginPath(); ctx.ellipse(-2, 6, 11, 5, 0.2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = hatColor;
+      ctx.beginPath(); ctx.moveTo(8, 2); ctx.lineTo(18, -2); ctx.lineTo(9, -6); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#f2e6c9';
+      ctx.beginPath(); ctx.ellipse(-9, 2, 5, 3, -0.3, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      // little dazed stars above the rubble
+      ctx.font = '13px Trebuchet MS';
+      ctx.textAlign = 'center';
+      ctx.fillText('💥', this.x, this.y - 20);
+      return;
+    }
+
+    const bob = Math.sin(this.bobPhase) * (this.state === 'walking' || this.state === 'approaching_hide' || this.state === 'stalking' ? 3 : 1.2);
+    ctx.translate(0, bob);
+
+    // Peeking out of a gopher hole: sink the whole body down so only
+    // the head/hat rise above ground level as peekAmount climbs.
+    if (this.state === 'peeking' && this.hideKind === 'hole') {
+      ctx.translate(0, (1 - this.peekAmount) * 26);
+    }
+
+    // Peeking from behind a tree: clip to a sliver on the outward
+    // side of the trunk so most of the body stays hidden.
+    let treeClip = false;
+    if (this.state === 'peeking' && this.hideKind === 'tree') {
+      treeClip = true;
+      ctx.save();
+      ctx.beginPath();
+      if (this.hideSide > 0) ctx.rect(-4, -45, 60, 90);
+      else ctx.rect(-56, -45, 60, 90);
+      ctx.clip();
+      ctx.globalAlpha = 0.55 + 0.45 * this.peekAmount;
+    }
+
+    // pointy little boots
+    ctx.fillStyle = '#3a2a1a';
+    ctx.beginPath(); ctx.ellipse(-6, 12, 4.5, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(6, 12, 4.5, 3, 0, 0, Math.PI * 2); ctx.fill();
+
+    // tunic body (gnome-shaped: wide base, narrow top)
+    ctx.beginPath();
+    ctx.moveTo(-11, 12);
+    ctx.quadraticCurveTo(-13, -2, -6, -6);
+    ctx.lineTo(6, -6);
+    ctx.quadraticCurveTo(13, -2, 11, 12);
+    ctx.closePath();
+    const bodyGrad = ctx.createLinearGradient(0, -6, 0, 12);
+    bodyGrad.addColorStop(0, tunicColor);
+    bodyGrad.addColorStop(1, tunicShadow);
+    ctx.fillStyle = bodyGrad;
+    ctx.fill();
+    ctx.strokeStyle = '#00000030';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // belt
+    ctx.fillStyle = '#5c3a1a';
+    ctx.fillRect(-10, 3, 20, 3);
+    ctx.fillStyle = '#f4b53f';
+    ctx.fillRect(-2.5, 2.5, 5, 4);
+
+    // stubby arms — reach forward when stalking
+    ctx.fillStyle = tunicShadow;
+    if (this.state === 'stalking') {
+      ctx.beginPath(); ctx.ellipse(-13, 2, 4, 3, -0.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(13, 2, 4, 3, 0.5, 0, Math.PI * 2); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.ellipse(-11, 6, 3.5, 5, 0.3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(11, 6, 3.5, 5, -0.3, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // head
+    ctx.beginPath();
+    ctx.arc(0, -12, 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#e8b48a';
+    ctx.fill();
+
+    // bushy white beard
+    ctx.fillStyle = '#f2ede0';
+    ctx.beginPath();
+    ctx.moveTo(-7, -9);
+    ctx.quadraticCurveTo(-8, 4, 0, 8);
+    ctx.quadraticCurveTo(8, 4, 7, -9);
+    ctx.quadraticCurveTo(0, -6, -7, -9);
+    ctx.fill();
+    ctx.strokeStyle = '#00000015';
+    ctx.stroke();
+
+    // nose
+    ctx.fillStyle = '#d69a6e';
+    ctx.beginPath(); ctx.arc(0, -12, 2.4, 0, Math.PI * 2); ctx.fill();
+
+    // eyebrows — angled meaner when stalking/staring, curious while peeking
+    const angry = this.state === 'stalking' || this.state === 'staring';
+    ctx.strokeStyle = '#5c4a30';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(-6, angry ? -17 : -18); ctx.lineTo(-2, angry ? -19 : -17.5);
+    ctx.moveTo(6, angry ? -17 : -18); ctx.lineTo(2, angry ? -19 : -17.5);
+    ctx.stroke();
+
+    // eyes — glow red while stalking, otherwise beady black
+    const eyeY = -14;
+    const blinkScale = this.blink ? 0.15 : 1;
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.ellipse(side * 3.2, eyeY, 1.8, 2 * blinkScale, 0, 0, Math.PI * 2);
+      ctx.fillStyle = this.state === 'stalking' ? '#ff3b3b' : '#2b2115';
+      ctx.fill();
+      if (this.state === 'stalking' && !this.blink) {
+        ctx.save();
+        ctx.shadowColor = '#ff3b3b';
+        ctx.shadowBlur = 5;
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // pointy conical hat
+    ctx.beginPath();
+    ctx.moveTo(-9, -18);
+    ctx.lineTo(9, -18);
+    ctx.lineTo(1, -38 - (this.state === 'stalking' ? 2 : 0));
+    ctx.closePath();
+    const hatGrad = ctx.createLinearGradient(0, -38, 0, -18);
+    hatGrad.addColorStop(0, hatColor);
+    hatGrad.addColorStop(1, hatShadow);
+    ctx.fillStyle = hatGrad;
+    ctx.fill();
+    ctx.strokeStyle = '#00000030';
+    ctx.stroke();
+    // hat brim + pompom
+    ctx.fillStyle = hatShadow;
+    ctx.fillRect(-10, -19, 20, 3);
+    ctx.beginPath(); ctx.arc(1, -38 - (this.state === 'stalking' ? 2 : 0), 2.6, 0, Math.PI * 2);
+    ctx.fillStyle = '#f2ede0'; ctx.fill();
+
+    // mischievous grin (extra evil while stalking)
+    ctx.beginPath();
+    if (this.state === 'stalking') {
+      ctx.strokeStyle = '#2b2115';
+      ctx.lineWidth = 1.4;
+      ctx.arc(0, -6, 3.5, 0.05 * Math.PI, 0.95 * Math.PI);
+      ctx.stroke();
+    } else if (this.state === 'staring' || this.state === 'peeking') {
+      ctx.arc(0, -6, 1.8, 0, Math.PI * 2);
+      ctx.fillStyle = '#2b2115';
+      ctx.fill();
+    }
+
+    if (treeClip) ctx.restore();
+    ctx.restore();
+  }
+}
+
+// ---------------------------------------------------------
+// POWER-UP
+// ---------------------------------------------------------
+const POWERUP_TYPES = {
+  super:  { label: 'Super Shot',   icon: '⚡', color: '#f4b53f' },
+  curve:  { label: 'Curve Ball',   icon: '〰️', color: '#5da9f4' },
+  speed:  { label: 'Speed Ball',   icon: '💨', color: '#3f9142' },
+  lucky:  { label: 'Lucky Bounce', icon: '🍀', color: '#63c76a' },
+  stroke: { label: 'Free Stroke',  icon: '★', color: '#e85d5d' },
+};
+
+class PowerUp {
+  constructor(x, y, type) {
+    this.x = x; this.y = y;
+    this.type = type;
+    this.radius = 12;
+    this.phase = Math.random() * 10;
+    this.collected = false;
+  }
+  update(dt) { this.phase += dt * 3; }
+  draw(ctx) {
+    const bob = Math.sin(this.phase) * 4;
+    const def = POWERUP_TYPES[this.type];
+    ctx.save();
+    ctx.translate(this.x, this.y + bob);
+    ctx.beginPath();
+    ctx.arc(0, 6 - bob, this.radius * 0.8, 0, Math.PI * 2);
+    ctx.fillStyle = '#00000020';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = def.color;
+    ctx.fill();
+    ctx.strokeStyle = '#ffffffaa';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(def.icon, 0, 1);
+    ctx.restore();
+  }
+}
+
+
+/* =========================================================
+   Course definitions.
+
+   Coordinate space is a fixed 1000x600 field (COURSE_W/H).
+
+   obstacles: solid, collidable
+     tree { type:'tree', x,y,r, restitution }
+     rock { type:'rock', x,y,r, restitution }
+     bush { type:'bush', x,y,r, restitution }
+     fence{ type:'fence', x,y,w,h, restitution }   (rect, x/y = top-left)
+
+   terrain: non-collidable friction zones the ball rolls over
+     { x,y,w,h, friction, wet, particleColor, label }
+     friction is a per-frame decay factor normalized to 60fps
+     (lower = more slowing). 'wet' triggers a splash/squelch fx.
+
+   wickets: passed in order
+     { x,y, angle, width }
+       angle = orientation of the two posts (see game.js loader)
+       width = gap between posts
+
+   stake: final target { x, y }
+   start: player/ball spawn { x, y }
+   belvaderes: number of wandering creatures on this course
+   ========================================================= */
+
+const COURSES = [
+  {
+    id: 0,
+    name: 'Backyard Practice',
+    blurb: 'Easy going. Learn the mallet.',
+    grass: '#7bc94d',
+    grassAlt: '#72bf46',
+    belvaderes: 3,
+    start: { x: 70, y: 300 },
+    obstacles: [
+      { type: 'tree', x: 320, y: 160, r: 24, restitution: 0.55 },
+      { type: 'bush', x: 480, y: 420, r: 18, restitution: 0.4 },
+      { type: 'rock', x: 700, y: 200, r: 14, restitution: 0.8 },
+      { type: 'gopherhole', x: 150, y: 450, r: 11 },
+      { type: 'gopherhole', x: 560, y: 500, r: 10 },
+      { type: 'gopherhole', x: 780, y: 130, r: 10 },
+    ],
+    terrain: [],
+    wickets: [
+      { x: 220, y: 300, angle: Math.PI / 2, width: 34 },
+      { x: 420, y: 190, angle: 0, width: 34 },
+      { x: 420, y: 420, angle: 0, width: 34 },
+      { x: 650, y: 300, angle: Math.PI / 2, width: 34 },
+      { x: 850, y: 300, angle: Math.PI / 2, width: 34 },
+    ],
+    stake: { x: 930, y: 300 },
+  },
+
+  {
+    id: 1,
+    name: 'Cro-Mags Park',
+    blurb: 'Trees, rocks, and a few local weirdos.',
+    grass: '#63b83f',
+    grassAlt: '#5aad38',
+    belvaderes: 4,
+    start: { x: 60, y: 100 },
+    obstacles: [
+      { type: 'tree', x: 260, y: 140, r: 22, restitution: 0.55 },
+      { type: 'tree', x: 300, y: 260, r: 22, restitution: 0.55 },
+      { type: 'bush', x: 480, y: 90, r: 20, restitution: 0.4 },
+      { type: 'bush', x: 520, y: 150, r: 16, restitution: 0.4 },
+      { type: 'rock', x: 650, y: 380, r: 16, restitution: 0.8 },
+      { type: 'rock', x: 700, y: 420, r: 12, restitution: 0.8 },
+      { type: 'tree', x: 830, y: 220, r: 24, restitution: 0.55 },
+      { type: 'gopherhole', x: 150, y: 420, r: 11 },
+      { type: 'gopherhole', x: 560, y: 300, r: 10 },
+      { type: 'gopherhole', x: 760, y: 90, r: 10 },
+    ],
+    terrain: [],
+    wickets: [
+      { x: 200, y: 100, angle: Math.PI / 2, width: 32 },
+      { x: 400, y: 260, angle: 0, width: 32 },
+      { x: 600, y: 130, angle: Math.PI / 2, width: 32 },
+      { x: 780, y: 420, angle: 0, width: 32 },
+      { x: 900, y: 200, angle: Math.PI / 2, width: 32 },
+    ],
+    stake: { x: 940, y: 480 },
+  },
+
+  {
+    id: 2,
+    name: 'Creekside',
+    blurb: 'A lazy creek splits the fairway. Mind the mud banks.',
+    grass: '#5eb43c',
+    grassAlt: '#55a934',
+    belvaderes: 4,
+    start: { x: 60, y: 300 },
+    obstacles: [
+      { type: 'rock', x: 430, y: 210, r: 14, restitution: 0.85 },
+      { type: 'rock', x: 460, y: 400, r: 14, restitution: 0.85 },
+      { type: 'tree', x: 200, y: 480, r: 22, restitution: 0.55 },
+      { type: 'bush', x: 780, y: 140, r: 18, restitution: 0.4 },
+      { type: 'gopherhole', x: 120, y: 150, r: 11 },
+      { type: 'gopherhole', x: 660, y: 150, r: 10 },
+      { type: 'gopherhole', x: 860, y: 450, r: 10 },
+    ],
+    terrain: [
+      { x: 400, y: 0, w: 110, h: 600, friction: 0.90, wet: true, particleColor: '#7fd0ff', label: 'creek' },
+      { x: 350, y: 0, w: 50, h: 600, friction: 0.955, wet: false, particleColor: '#a97c4f', label: 'mud bank' },
+      { x: 510, y: 0, w: 50, h: 600, friction: 0.955, wet: false, particleColor: '#a97c4f', label: 'mud bank' },
+    ],
+    bridges: [
+      { x: 345, y: 270, w: 220, h: 60 },
+    ],
+    wickets: [
+      { x: 220, y: 300, angle: Math.PI / 2, width: 34 },
+      { x: 330, y: 150, angle: 0, width: 32 },
+      { x: 460, y: 300, angle: Math.PI / 2, width: 40 },
+      { x: 600, y: 450, angle: 0, width: 32 },
+      { x: 780, y: 300, angle: Math.PI / 2, width: 32 },
+    ],
+    stake: { x: 930, y: 300 },
+  },
+
+  {
+    id: 3,
+    name: 'Railroad Crossing',
+    blurb: 'Wooden fences and sand traps. Bring bank shots.',
+    grass: '#5aab3a',
+    grassAlt: '#519f32',
+    belvaderes: 5,
+    start: { x: 60, y: 500 },
+    obstacles: [
+      { type: 'fence', x: 280, y: 0, w: 18, h: 220, restitution: 0.75 },
+      { type: 'fence', x: 280, y: 320, w: 18, h: 280, restitution: 0.75 },
+      { type: 'fence', x: 600, y: 100, w: 220, h: 18, restitution: 0.75 },
+      { type: 'rock', x: 500, y: 500, r: 16, restitution: 0.85 },
+      { type: 'tree', x: 850, y: 480, r: 22, restitution: 0.55 },
+      { type: 'gopherhole', x: 150, y: 150, r: 11 },
+      { type: 'gopherhole', x: 430, y: 470, r: 10 },
+      { type: 'gopherhole', x: 900, y: 150, r: 10 },
+    ],
+    terrain: [
+      { x: 380, y: 380, w: 160, h: 130, friction: 0.945, wet: false, particleColor: '#e8d18a', label: 'sand' },
+      { x: 700, y: 250, w: 150, h: 110, friction: 0.945, wet: false, particleColor: '#e8d18a', label: 'sand' },
+    ],
+    wickets: [
+      { x: 200, y: 500, angle: Math.PI / 2, width: 32 },
+      { x: 280, y: 270, angle: 0, width: 40 },
+      { x: 450, y: 150, angle: Math.PI / 2, width: 32 },
+      { x: 620, y: 400, angle: 0, width: 32 },
+      { x: 800, y: 250, angle: Math.PI / 2, width: 32 },
+    ],
+    stake: { x: 930, y: 480 },
+  },
+
+  {
+    id: 4,
+    name: 'Twilight Finals',
+    blurb: 'Every hazard at once, under a dusky sky. Good luck.',
+    grass: '#3f8f4a',
+    grassAlt: '#377f41',
+    belvaderes: 6,
+    start: { x: 60, y: 300 },
+    obstacles: [
+      { type: 'tree', x: 230, y: 140, r: 22, restitution: 0.55 },
+      { type: 'tree', x: 230, y: 460, r: 22, restitution: 0.55 },
+      { type: 'rock', x: 400, y: 300, r: 16, restitution: 0.85 },
+      { type: 'bush', x: 550, y: 150, r: 18, restitution: 0.4 },
+      { type: 'fence', x: 620, y: 350, w: 160, h: 18, restitution: 0.75 },
+      { type: 'rock', x: 850, y: 160, r: 14, restitution: 0.85 },
+      { type: 'tree', x: 880, y: 460, r: 24, restitution: 0.55 },
+      { type: 'gopherhole', x: 150, y: 300, r: 11 },
+      { type: 'gopherhole', x: 600, y: 220, r: 10 },
+      { type: 'gopherhole', x: 770, y: 290, r: 10 },
+    ],
+    terrain: [
+      { x: 480, y: 380, w: 110, h: 160, friction: 0.90, wet: true, particleColor: '#7fd0ff', label: 'creek' },
+      { x: 700, y: 60, w: 140, h: 110, friction: 0.945, wet: false, particleColor: '#e8d18a', label: 'sand' },
+      { x: 330, y: 40, w: 120, h: 90, friction: 0.955, wet: false, particleColor: '#a97c4f', label: 'mud' },
+    ],
+    bridges: [
+      { x: 495, y: 425, w: 100, h: 70 },
+    ],
+    wickets: [
+      { x: 180, y: 300, angle: Math.PI / 2, width: 32 },
+      { x: 330, y: 150, angle: 0, width: 30 },
+      { x: 330, y: 470, angle: 0, width: 30 },
+      { x: 535, y: 460, angle: Math.PI / 2, width: 32 },
+      { x: 660, y: 150, angle: Math.PI / 2, width: 30 },
+      { x: 780, y: 470, angle: 0, width: 30 },
+      { x: 900, y: 300, angle: Math.PI / 2, width: 32 },
+    ],
+    stake: { x: 950, y: 300 },
+    twilight: true,
+  },
+];
+
+
+/* =========================================================
+   Playable characters. Gameplay is identical for now —
+   these are purely cosmetic definitions, structured so new
+   characters (and later, per-character quirks) are easy to
+   add.
+   ========================================================= */
+
+const CHARACTERS = [
+  {
+    id: 'brent',
+    name: 'Brent',
+    tagline: 'Confidently wrong about the rules',
+    shirt: '#5da9f4',
+    pants: '#2b2115',
+    skin: '#e8b48a',
+    hair: '#3a2a1a',
+  },
+  {
+    id: 'jeff',
+    name: 'Jeff',
+    tagline: 'Brought his own mallet',
+    shirt: '#e85d5d',
+    pants: '#3a3a3a',
+    skin: '#f2c9a0',
+    hair: '#111111',
+  },
+  {
+    id: 'russ',
+    name: 'Russ',
+    tagline: 'Definitely not competitive',
+    shirt: '#3f9142',
+    pants: '#4a3a20',
+    skin: '#c98a5a',
+    hair: '#6b4a2a',
+  },
+];
+
+
+/* =========================================================
+   Game — the state machine and main loop.
+   States: menu | howto | character | course | playing |
+           paused | victory
+   ========================================================= */
+
+class Game {
+  constructor() {
+    this.canvas = document.getElementById('game-canvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.hintEl = document.getElementById('hint-text');
+
+    this.state = 'menu';
+    this.keys = {};
+    this.mouse = { x: 500, y: 300 };
+    this.charging = false;
+    this.chargeStart = 0;
+    this.maxChargeMs = 1100;
+    this.awaitingConfirm = false; // power is locked, still free to re-aim before firing
+    this.chargedPower = null;
+    this.hintTimer = 0;
+
+    this.selectedCharacter = CHARACTERS[0];
+    this.selectedCourseIndex = 0;
+
+    this.particles = new ParticleSystem();
+    this.course = null;
+    this.player = null;
+    this.ball = null;
+
+    this.strokes = 0;
+    this.bonks = 0;
+    this.elapsed = 0;
+    this.currentWicketIndex = 0;
+    this.effects = { super: false, curve: false, speed: false, lucky: false };
+    this.powerupTimer = 3;
+    this.stealGraceTimer = 0;
+
+    this.lastTime = performance.now();
+
+    this._bindInput();
+    this._bindUI();
+    this._buildCharacterCards();
+    this._buildCourseCards();
+
+    requestAnimationFrame(this.loop.bind(this));
+  }
+
+  // ------------------------------------------------------
+  // INPUT
+  // ------------------------------------------------------
+  _bindInput() {
+    window.addEventListener('keydown', (e) => {
+      this.keys[e.key.toLowerCase()] = true;
+      if (e.key === 'Escape') {
+        if (this.state === 'playing') {
+          if (this.charging || this.awaitingConfirm) this.cancelSwing();
+          else this.pause();
+        } else if (this.state === 'paused') this.resume();
+      }
+    });
+    window.addEventListener('keyup', (e) => {
+      this.keys[e.key.toLowerCase()] = false;
+    });
+
+    const toCourseCoords = (e) => {
+      const r = this.canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - r.left) * (COURSE_W / r.width),
+        y: (e.clientY - r.top) * (COURSE_H / r.height),
+      };
+    };
+
+    window.addEventListener('mousemove', (e) => {
+      const p = toCourseCoords(e);
+      this.mouse.x = p.x; this.mouse.y = p.y;
+    });
+
+    this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    this.canvas.addEventListener('mousedown', (e) => {
+      if (this.state !== 'playing') return;
+
+      // Right click cancels an in-progress swing so the shot can be redone.
+      if (e.button === 2) {
+        if (this.charging || this.awaitingConfirm) this.cancelSwing();
+        return;
+      }
+      if (e.button !== 0) return;
+      if (!this.ball || this.ball.moving) return;
+
+      if (this.awaitingConfirm) {
+        // Second click: fire with the locked power at whatever angle
+        // the mouse is aimed at right now.
+        this.fireShot(this.chargedPower);
+        return;
+      }
+
+      // First click: begin charging power.
+      this.charging = true;
+      this.chargeStart = performance.now();
+      AUDIO._ensureCtx();
+    });
+
+    window.addEventListener('mouseup', (e) => {
+      if (e.button !== 0 || !this.charging) return;
+      this.lockPower();
+    });
+  }
+
+  cancelSwing() {
+    this.charging = false;
+    this.awaitingConfirm = false;
+    this.chargedPower = null;
+    this.showHint('Shot cancelled');
+  }
+
+  // ------------------------------------------------------
+  // UI WIRING
+  // ------------------------------------------------------
+  _bindUI() {
+    const on = (id, fn) => document.getElementById(id).addEventListener('click', () => { AUDIO.playClick(); fn(); });
+
+    on('btn-play', () => this.showScreen('screen-character'));
+    on('btn-howto', () => this.showScreen('screen-howto'));
+    on('btn-howto-back', () => this.showScreen('screen-menu'));
+    on('btn-char-back', () => this.showScreen('screen-menu'));
+    on('btn-course-back', () => this.showScreen('screen-character'));
+
+    on('pause-btn', () => this.pause());
+    on('btn-resume', () => this.resume());
+    on('btn-restart', () => this.startGame());
+    on('btn-quit', () => this.quitToMenu());
+
+    on('btn-next-course', () => {
+      this.selectedCourseIndex = Math.min(COURSES.length - 1, this.selectedCourseIndex + 1);
+      this.startGame();
+    });
+    on('btn-replay', () => this.startGame());
+    on('btn-victory-menu', () => this.quitToMenu());
+  }
+
+  _buildCharacterCards() {
+    const grid = document.getElementById('character-grid');
+    CHARACTERS.forEach((c, i) => {
+      const card = document.createElement('div');
+      card.className = 'card' + (i === 0 ? ' selected' : '');
+      card.innerHTML = `<div class="card-thumb" style="background:${c.shirt}">${c.name}</div><h3>${c.name}</h3><p>${c.tagline}</p>`;
+      card.addEventListener('click', () => {
+        AUDIO.playClick();
+        this.selectedCharacter = c;
+        grid.querySelectorAll('.card').forEach((el) => el.classList.remove('selected'));
+        card.classList.add('selected');
+        this.showScreen('screen-course');
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  _buildCourseCards() {
+    const grid = document.getElementById('course-grid');
+    COURSES.forEach((c, i) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<div class="card-thumb" style="background:${c.grass}">Course ${i + 1}</div><h3>${c.name}</h3><p>${c.blurb}</p>`;
+      card.addEventListener('click', () => {
+        AUDIO.playClick();
+        this.selectedCourseIndex = i;
+        this.startGame();
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  // ------------------------------------------------------
+  // SCREEN / STATE HELPERS
+  // ------------------------------------------------------
+  hideAllScreens() {
+    document.querySelectorAll('.screen').forEach((el) => el.classList.add('hidden'));
+  }
+
+  showScreen(id) {
+    this.hideAllScreens();
+    document.getElementById(id).classList.remove('hidden');
+    if (id !== 'screen-pause' && id !== 'screen-victory') {
+      document.getElementById('hud').classList.add('hidden');
+      const map = { 'screen-menu': 'menu', 'screen-howto': 'howto', 'screen-character': 'character', 'screen-course': 'course' };
+      if (map[id]) this.state = map[id];
+    }
+  }
+
+  showHint(msg) {
+    this.hintEl.textContent = msg;
+    this.hintEl.classList.add('show');
+    this.hintTimer = 1.6;
+  }
+
+  formatTime(s) {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+  }
+
+  computeScore() {
+    return Math.max(0, Math.round(1000 - this.strokes * 18 - this.elapsed * 2));
+  }
+
+  // ------------------------------------------------------
+  // COURSE LOADING
+  // ------------------------------------------------------
+  loadCourse(index) {
+    const def = COURSES[index];
+    const wickets = def.wickets.map((w) => ({ ...w, completed: false }));
+    for (const w of wickets) {
+      w.postWorld = [
+        { x: w.x + Math.cos(w.angle) * (w.width / 2), y: w.y + Math.sin(w.angle) * (w.width / 2) },
+        { x: w.x - Math.cos(w.angle) * (w.width / 2), y: w.y - Math.sin(w.angle) * (w.width / 2) },
+      ];
+    }
+
+    this.course = { ...def, wickets, powerups: [], belvaderesList: [] };
+    for (let i = 0; i < def.belvaderes; i++) {
+      const x = rand(150, COURSE_W - 150), y = rand(80, COURSE_H - 80);
+      const gnome = new Belvadere(x, y, rand(0, 360));
+      pushOutOfObstacles(gnome, this.course, gnome.radius);
+      this.course.belvaderesList.push(gnome);
+    }
+
+    this.player = new Player(def.start.x, def.start.y, this.selectedCharacter);
+    this.ball = new Ball(def.start.x + 30, def.start.y);
+
+    this.strokes = 0;
+    this.bonks = 0;
+    this.elapsed = 0;
+    this.currentWicketIndex = 0;
+    this.effects = { super: false, curve: false, speed: false, lucky: false };
+    this.powerupTimer = rand(2, 5);
+    this.stealGraceTimer = 2; // brief safety window right after teeing off
+    this.particles = new ParticleSystem();
+
+    document.getElementById('hud-course-name').textContent = def.name;
+    this.updateEffectTray();
+    this.updateHUD();
+  }
+
+  startGame() {
+    this.hideAllScreens();
+    document.getElementById('hud').classList.remove('hidden');
+    this.loadCourse(this.selectedCourseIndex);
+    this.state = 'playing';
+    AUDIO.startMusic();
+  }
+
+  pause() {
+    if (this.state !== 'playing') return;
+    this.charging = false;
+    this.state = 'paused';
+    AUDIO.stopRoll();
+    AUDIO.stopMusic();
+    this.showScreen('screen-pause');
+  }
+
+  resume() {
+    if (this.state !== 'paused') return;
+    this.state = 'playing';
+    document.getElementById('screen-pause').classList.add('hidden');
+    AUDIO.startMusic();
+  }
+
+  quitToMenu() {
+    AUDIO.stopRoll();
+    AUDIO.stopMusic();
+    this.charging = false;
+    this.showScreen('screen-menu');
+  }
+
+  // ------------------------------------------------------
+  // SWING
+  // ------------------------------------------------------
+  // Mouse released after charging: lock in the power but don't fire
+  // yet — the player can keep moving the mouse to fine-tune aim.
+  lockPower() {
+    const power = clamp((performance.now() - this.chargeStart) / this.maxChargeMs, 0, 1);
+    this.charging = false;
+    if (this.state !== 'playing') return;
+
+    const d = dist(this.player.x, this.player.y, this.ball.x, this.ball.y);
+    const hitRange = this.player.radius + this.ball.radius + 28;
+    if (d > hitRange) {
+      this.showHint('Get closer to the ball!');
+      return;
+    }
+
+    this.chargedPower = power;
+    this.awaitingConfirm = true;
+    this.showHint('Aim, then click to strike!');
+  }
+
+  // Second click confirms: fires the ball with the locked power at
+  // whatever angle the mouse is aimed at right now.
+  fireShot(power) {
+    this.awaitingConfirm = false;
+    this.chargedPower = null;
+    if (this.state !== 'playing') return;
+
+    const d = dist(this.player.x, this.player.y, this.ball.x, this.ball.y);
+    const hitRange = this.player.radius + this.ball.radius + 28;
+    if (d > hitRange) {
+      this.showHint('Get closer to the ball!');
+      return;
+    }
+
+    const angle = Math.atan2(this.mouse.y - this.player.y, this.mouse.x - this.player.x);
+
+    let powerMult = 1;
+    if (this.effects.super) { powerMult *= 1.55; this.effects.super = false; }
+    if (this.effects.speed) { powerMult *= 1.3; this.effects.speed = false; }
+    if (this.effects.curve) { this.ball.curveForce = (Math.random() < 0.5 ? -1 : 1) * 260; this.effects.curve = false; }
+    if (this.effects.lucky) { this.ball.luckyBounce = true; this.effects.lucky = false; }
+    this.updateEffectTray();
+
+    const minSpeed = 90, maxSpeed = 560;
+    const speed = (minSpeed + (maxSpeed - minSpeed) * power) * powerMult;
+    this.ball.launch(Math.cos(angle), Math.sin(angle), speed);
+
+    this.strokes++;
+    AUDIO.playSwing(power);
+    AUDIO.playHit(power);
+    AUDIO.startRoll();
+    this.particles.dust(this.ball.x, this.ball.y, '#ffffffcc');
+    this.updateHUD();
+  }
+
+  // ------------------------------------------------------
+  // POWER-UPS
+  // ------------------------------------------------------
+  spawnPowerUp() {
+    let x, y, tries = 0;
+    do {
+      x = rand(60, COURSE_W - 60);
+      y = rand(60, COURSE_H - 60);
+      tries++;
+    } while (tries < 20 && this._tooCloseToObstacle(x, y));
+    const types = Object.keys(POWERUP_TYPES);
+    const type = types[Math.floor(Math.random() * types.length)];
+    this.course.powerups.push(new PowerUp(x, y, type));
+  }
+
+  _tooCloseToObstacle(x, y) {
+    for (const o of this.course.obstacles) {
+      if (o.type === 'fence') {
+        if (x > o.x - 20 && x < o.x + o.w + 20 && y > o.y - 20 && y < o.y + o.h + 20) return true;
+      } else if (dist(x, y, o.x, o.y) < o.r + 30) return true;
+    }
+    return false;
+  }
+
+  applyPowerUp(type) {
+    AUDIO.playPowerUp();
+    this.particles.sparkle(this.ball.x, this.ball.y, POWERUP_TYPES[type].color);
+    if (type === 'stroke') {
+      this.strokes = Math.max(0, this.strokes - 1);
+      this.showHint('Free stroke!');
+    } else {
+      this.effects[type] = true;
+      this.showHint(POWERUP_TYPES[type].label + ' ready!');
+    }
+    this.updateEffectTray();
+  }
+
+  updateEffectTray() {
+    const tray = document.getElementById('effect-tray');
+    tray.innerHTML = '';
+    for (const key of ['super', 'curve', 'speed', 'lucky']) {
+      if (this.effects[key]) {
+        const chip = document.createElement('div');
+        chip.className = 'effect-chip';
+        chip.textContent = POWERUP_TYPES[key].icon + ' ' + POWERUP_TYPES[key].label;
+        tray.appendChild(chip);
+      }
+    }
+  }
+
+  // ------------------------------------------------------
+  // GNOME BALL-GRAB
+  // ------------------------------------------------------
+  gnomeSteal(gnome) {
+    AUDIO.playSteal();
+    this.particles.burst(this.ball.x, this.ball.y, '#ffffff', 10, { speed: 90, life: 0.4, size: 2.5 });
+    this.particles.burst(this.ball.x, this.ball.y, `hsl(${gnome.hatHue},70%,50%)`, 6, { speed: 70, life: 0.4, size: 2 });
+
+    const targetWicketIdx = Math.max(0, this.currentWicketIndex - 1);
+    this.currentWicketIndex = targetWicketIdx;
+    for (let i = targetWicketIdx; i < this.course.wickets.length; i++) {
+      this.course.wickets[i].completed = false;
+    }
+
+    let respawnX, respawnY;
+    if (targetWicketIdx === 0) {
+      respawnX = this.course.start.x + 30;
+      respawnY = this.course.start.y;
+    } else {
+      const prevW = this.course.wickets[targetWicketIdx - 1];
+      respawnX = prevW.x;
+      respawnY = prevW.y;
+    }
+    this.ball.x = respawnX;
+    this.ball.y = respawnY;
+    this.ball.vx = 0;
+    this.ball.vy = 0;
+    this.ball.trail = [];
+    this.ball.inWater = false;
+    this.ball.hazardTriggered = false;
+
+    gnome.state = 'idle';
+    gnome.grabTimer = 0;
+    gnome.grabCooldown = rand(3, 5);
+    gnome.x = clamp(gnome.x + rand(-50, 50), 40, COURSE_W - 40);
+    gnome.y = clamp(gnome.y + rand(-50, 50), 40, COURSE_H - 40);
+    gnome.timer = rand(1.5, 3);
+
+    this.stealGraceTimer = 1.5;
+    this.showHint('A gnome grabbed your ball! Redo that wicket!');
+    this.updateHUD();
+  }
+
+  // ------------------------------------------------------
+  // WICKETS / STAKE
+  // ------------------------------------------------------
+  _ballInGate(w) {
+    const dx = this.ball.x - w.x, dy = this.ball.y - w.y;
+    const along = dx * Math.cos(w.angle) + dy * Math.sin(w.angle);
+    const across = -dx * Math.sin(w.angle) + dy * Math.cos(w.angle);
+    return Math.abs(along) < w.width / 2 - 2 && Math.abs(across) < 9;
+  }
+
+  finishHole() {
+    this.state = 'victory';
+    AUDIO.stopRoll();
+    AUDIO.stopMusic();
+    AUDIO.playVictory();
+    this.particles.confetti(COURSE_W / 2, COURSE_H / 2, 60);
+
+    const score = this.computeScore();
+    document.getElementById('v-strokes').textContent = this.strokes;
+    document.getElementById('v-time').textContent = this.formatTime(this.elapsed);
+    document.getElementById('v-bonks').textContent = this.bonks;
+    document.getElementById('v-score').textContent = score;
+    document.getElementById('victory-title').textContent = this.course.name + ' — Complete!';
+    document.getElementById('hud').classList.add('hidden');
+
+    const nextBtn = document.getElementById('btn-next-course');
+    nextBtn.style.display = this.selectedCourseIndex < COURSES.length - 1 ? 'inline-block' : 'none';
+
+    this.showScreen('screen-victory');
+  }
+
+  updateHUD() {
+    document.getElementById('hud-strokes').textContent = this.strokes;
+    document.getElementById('hud-wicket').textContent =
+      Math.min(this.currentWicketIndex + 1, this.course.wickets.length) + ' / ' + this.course.wickets.length;
+    document.getElementById('hud-time').textContent = this.formatTime(this.elapsed);
+    document.getElementById('hud-score').textContent = this.computeScore();
+  }
+
+  // ------------------------------------------------------
+  // MAIN LOOP
+  // ------------------------------------------------------
+  loop(now) {
+    const dt = Math.min(0.033, (now - this.lastTime) / 1000);
+    this.lastTime = now;
+    this.update(dt);
+    this.render();
+    requestAnimationFrame(this.loop.bind(this));
+  }
+
+  update(dt) {
+    if (this.hintTimer > 0) {
+      this.hintTimer -= dt;
+      if (this.hintTimer <= 0) this.hintEl.classList.remove('show');
+    }
+
+    if (this.state !== 'playing') {
+      this.particles.update(dt);
+      return;
+    }
+
+    this.elapsed += dt;
+
+    const aimAngle = Math.atan2(this.mouse.y - this.player.y, this.mouse.x - this.player.x);
+    this.player.update(dt, this.keys, this.course, this.charging || !this.ball.moving ? aimAngle : null);
+    this.ball.update(dt, this.course, this.particles);
+
+    if (this.ball.hazardTriggered) {
+      this.ball.hazardTriggered = false;
+      this.showHint("Splash! Fished back out to where it went in.");
+    }
+
+    if (this.ball.moving) AUDIO.updateRoll(clamp(this.ball.speed / 560, 0, 1));
+    else AUDIO.stopRoll();
+
+    if (this.stealGraceTimer > 0) this.stealGraceTimer -= dt;
+
+    const STALK_RANGE = 70;
+    const GRAB_RANGE = 20;
+    for (const gnome of this.course.belvaderesList) {
+      // Decide whether this gnome should be stalking the stationary ball.
+      if (!gnome.down && gnome.grabCooldown <= 0 && this.stealGraceTimer <= 0) {
+        const dToBall = dist(this.ball.x, this.ball.y, gnome.x, gnome.y);
+        if (!this.ball.moving && dToBall < STALK_RANGE) {
+          gnome.state = 'stalking';
+          if (dToBall > GRAB_RANGE) {
+            const nx = (this.ball.x - gnome.x) / dToBall, ny = (this.ball.y - gnome.y) / dToBall;
+            gnome.x += nx * gnome.speed * 1.5 * dt;
+            gnome.y += ny * gnome.speed * 1.5 * dt;
+            pushOutOfObstacles(gnome, this.course, gnome.radius);
+            gnome.grabTimer = 0;
+          } else {
+            gnome.grabTimer += dt;
+            if (gnome.grabTimer > 0.55) this.gnomeSteal(gnome);
+          }
+        } else if (gnome.state === 'stalking') {
+          gnome.state = 'idle';
+          gnome.timer = rand(0.4, 1.2);
+          gnome.grabTimer = 0;
+        }
+      }
+
+      gnome.update(dt, this.particles, this.course);
+
+      const d = dist(this.ball.x, this.ball.y, gnome.x, gnome.y);
+      if (d < this.ball.radius + gnome.radius) {
+        this.ball._resolveCircle({ x: gnome.x, y: gnome.y, r: gnome.radius, restitution: 0.6 }, this.particles);
+        if (!gnome.down && this.ball.speed > 40) { gnome.knockOver(this.particles); this.bonks++; }
+      }
+    }
+
+    this.powerupTimer -= dt;
+    if (this.powerupTimer <= 0 && this.course.powerups.length < 3) {
+      this.spawnPowerUp();
+      this.powerupTimer = rand(4, 8);
+    }
+    for (let i = this.course.powerups.length - 1; i >= 0; i--) {
+      const p = this.course.powerups[i];
+      p.update(dt);
+      if (dist(this.ball.x, this.ball.y, p.x, p.y) < this.ball.radius + p.radius) {
+        this.applyPowerUp(p.type);
+        this.course.powerups.splice(i, 1);
+      }
+    }
+
+    if (this.currentWicketIndex < this.course.wickets.length) {
+      const w = this.course.wickets[this.currentWicketIndex];
+      if (this._ballInGate(w)) {
+        w.completed = true;
+        this.currentWicketIndex++;
+        AUDIO.playWicket();
+        this.particles.sparkle(this.ball.x, this.ball.y);
+        this.showHint(this.currentWicketIndex < this.course.wickets.length ? 'Wicket!' : 'All wickets! Find the stake.');
+      }
+    } else if (dist(this.ball.x, this.ball.y, this.course.stake.x, this.course.stake.y) < 16) {
+      this.finishHole();
+    }
+
+    this.updateHUD();
+    this.particles.update(dt);
+  }
+
+  // ------------------------------------------------------
+  // RENDER
+  // ------------------------------------------------------
+  render() {
+    const ctx = this.ctx;
+    ctx.clearRect(0, 0, COURSE_W, COURSE_H);
+    if (['playing', 'paused', 'victory'].includes(this.state) && this.course) {
+      this.renderCourse();
+    } else {
+      ctx.fillStyle = '#7bc94d';
+      ctx.fillRect(0, 0, COURSE_W, COURSE_H);
+    }
+  }
+
+  renderCourse() {
+    const ctx = this.ctx;
+    const course = this.course;
+
+    ctx.fillStyle = course.grass;
+    ctx.fillRect(0, 0, COURSE_W, COURSE_H);
+    ctx.fillStyle = course.grassAlt;
+    for (let i = 0; i < COURSE_W; i += 60) {
+      if ((i / 60) % 2 === 0) ctx.fillRect(i, 0, 60, COURSE_H);
+    }
+    if (course.twilight) {
+      ctx.fillStyle = 'rgba(20,20,60,0.28)';
+      ctx.fillRect(0, 0, COURSE_W, COURSE_H);
+    }
+
+    for (const t of course.terrain) {
+      ctx.globalAlpha = 0.85;
+      ctx.fillStyle = t.wet ? '#5cb0e0' : (t.label === 'sand' ? '#e6d29a' : '#a97c4f');
+      ctx.fillRect(t.x, t.y, t.w, t.h);
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = '#00000020';
+      ctx.strokeRect(t.x, t.y, t.w, t.h);
+    }
+
+    for (const br of (course.bridges || [])) this.drawBridge(br);
+
+    course.wickets.forEach((w, i) => {
+      ctx.save();
+      ctx.translate(w.x, w.y);
+      ctx.rotate(w.angle);
+      const isCurrent = i === this.currentWicketIndex;
+      const isDone = i < this.currentWicketIndex;
+      ctx.strokeStyle = isDone ? '#ffffff90' : (isCurrent ? '#fff23f' : '#e8e8e8');
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(-w.width / 2, 0); ctx.lineTo(-w.width / 2, -18);
+      ctx.moveTo(w.width / 2, 0); ctx.lineTo(w.width / 2, -18);
+      ctx.stroke();
+      if (isCurrent) {
+        ctx.strokeStyle = '#fff23f';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(-w.width / 2, 0); ctx.lineTo(w.width / 2, 0);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      ctx.restore();
+      ctx.fillStyle = '#00000060';
+      ctx.font = 'bold 11px Trebuchet MS';
+      ctx.textAlign = 'center';
+      ctx.fillText(i + 1, w.x, w.y - 24);
+    });
+
+    const reachable = this.currentWicketIndex >= course.wickets.length;
+    ctx.save();
+    ctx.translate(course.stake.x, course.stake.y);
+    ctx.strokeStyle = '#5c3a1a'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(0, 6); ctx.lineTo(0, -26); ctx.stroke();
+    ctx.fillStyle = reachable ? '#e85d5d' : '#e85d5d80';
+    ctx.beginPath(); ctx.moveTo(0, -26); ctx.lineTo(18, -20); ctx.lineTo(0, -14); ctx.fill();
+    ctx.restore();
+
+    for (const o of course.obstacles) this.drawObstacle(o);
+    for (const p of course.powerups) p.draw(ctx);
+    for (const b of course.belvaderesList) b.draw(ctx);
+    for (const o of course.obstacles) if (o.type === 'gopherhole') this.drawGopherHoleRim(o);
+
+    if (this.ball) this.ball.draw(ctx);
+    if (this.player) this.player.draw(ctx);
+
+    if ((this.charging || this.awaitingConfirm) && this.player && this.ball) {
+      const power = this.awaitingConfirm ? this.chargedPower : clamp((performance.now() - this.chargeStart) / this.maxChargeMs, 0, 1);
+      const angle = Math.atan2(this.mouse.y - this.player.y, this.mouse.x - this.player.x);
+      ctx.save();
+      if (this.awaitingConfirm) {
+        ctx.strokeStyle = '#fff23f';
+        ctx.lineWidth = 3;
+      } else {
+        ctx.strokeStyle = `rgba(255,255,255,${0.5 + power * 0.5})`;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 5]);
+      }
+      ctx.beginPath();
+      ctx.moveTo(this.player.x, this.player.y);
+      ctx.lineTo(this.player.x + Math.cos(angle) * (60 + power * 120), this.player.y + Math.sin(angle) * (60 + power * 120));
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+
+      ctx.save();
+      const bw = 40, bh = 6;
+      ctx.translate(this.player.x - bw / 2, this.player.y - 46);
+      ctx.fillStyle = '#00000060'; ctx.fillRect(0, 0, bw, bh);
+      ctx.fillStyle = power < 0.6 ? '#63c76a' : power < 0.9 ? '#f4b53f' : '#e85d5d';
+      ctx.fillRect(1, 1, (bw - 2) * power, bh - 2);
+      if (this.awaitingConfirm) {
+        ctx.strokeStyle = '#fff23f';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(0, 0, bw, bh);
+      }
+      ctx.restore();
+    }
+
+    this.particles.draw(ctx);
+
+    if (this.state === 'paused') {
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.fillRect(0, 0, COURSE_W, COURSE_H);
+    }
+  }
+
+  drawBridge(br) {
+    const ctx = this.ctx;
+    // drop shadow onto the water/terrain beneath
+    ctx.fillStyle = '#00000025';
+    ctx.fillRect(br.x + 3, br.y + 4, br.w, br.h);
+
+    // deck
+    const deckGrad = ctx.createLinearGradient(br.x, br.y, br.x, br.y + br.h);
+    deckGrad.addColorStop(0, '#c08a45');
+    deckGrad.addColorStop(1, '#a06b30');
+    ctx.fillStyle = deckGrad;
+    ctx.fillRect(br.x, br.y, br.w, br.h);
+
+    const isWide = br.w >= br.h;
+    const plankCount = Math.max(3, Math.round((isWide ? br.w : br.h) / 16));
+    ctx.strokeStyle = '#7a5225';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    if (isWide) {
+      for (let i = 1; i < plankCount; i++) {
+        const px = br.x + i * (br.w / plankCount);
+        ctx.moveTo(px, br.y + 3);
+        ctx.lineTo(px, br.y + br.h - 3);
+      }
+    } else {
+      for (let i = 1; i < plankCount; i++) {
+        const py = br.y + i * (br.h / plankCount);
+        ctx.moveTo(br.x + 3, py);
+        ctx.lineTo(br.x + br.w - 3, py);
+      }
+    }
+    ctx.stroke();
+
+    // deck edge
+    ctx.strokeStyle = '#5c3a1a';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(br.x, br.y, br.w, br.h);
+
+    // rope-and-post rails along the long edges
+    ctx.strokeStyle = '#5c3a1a';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    if (isWide) {
+      ctx.beginPath(); ctx.moveTo(br.x, br.y); ctx.lineTo(br.x + br.w, br.y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(br.x, br.y + br.h); ctx.lineTo(br.x + br.w, br.y + br.h); ctx.stroke();
+      ctx.fillStyle = '#7a5230';
+      for (let px = br.x; px <= br.x + br.w; px += br.w / 4) {
+        ctx.fillRect(px - 2, br.y - 5, 4, 10);
+        ctx.fillRect(px - 2, br.y + br.h - 5, 4, 10);
+      }
+    } else {
+      ctx.beginPath(); ctx.moveTo(br.x, br.y); ctx.lineTo(br.x, br.y + br.h); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(br.x + br.w, br.y); ctx.lineTo(br.x + br.w, br.y + br.h); ctx.stroke();
+      ctx.fillStyle = '#7a5230';
+      for (let py = br.y; py <= br.y + br.h; py += br.h / 4) {
+        ctx.fillRect(br.x - 5, py - 2, 10, 4);
+        ctx.fillRect(br.x + br.w - 5, py - 2, 10, 4);
+      }
+    }
+    ctx.lineCap = 'butt';
+  }
+
+  drawObstacle(o) {
+    const ctx = this.ctx;
+    if (o.type === 'tree') {
+      ctx.beginPath(); ctx.ellipse(o.x, o.y + o.r * 0.7, o.r * 0.9, o.r * 0.35, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#00000025'; ctx.fill();
+      ctx.fillStyle = '#7a5230'; ctx.fillRect(o.x - 4, o.y, 8, o.r * 0.6);
+      ctx.beginPath(); ctx.arc(o.x, o.y - o.r * 0.3, o.r, 0, Math.PI * 2);
+      ctx.fillStyle = '#2f7d3a'; ctx.fill();
+      ctx.beginPath(); ctx.arc(o.x - o.r * 0.3, o.y - o.r * 0.5, o.r * 0.7, 0, Math.PI * 2);
+      ctx.fillStyle = '#358a41'; ctx.fill();
+    } else if (o.type === 'rock') {
+      ctx.beginPath(); ctx.ellipse(o.x, o.y + o.r * 0.6, o.r * 0.9, o.r * 0.35, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#00000020'; ctx.fill();
+      ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+      ctx.fillStyle = '#9a9a95'; ctx.fill();
+      ctx.beginPath(); ctx.arc(o.x - o.r * 0.3, o.y - o.r * 0.3, o.r * 0.4, 0, Math.PI * 2);
+      ctx.fillStyle = '#b5b5ae'; ctx.fill();
+    } else if (o.type === 'bush') {
+      ctx.beginPath(); ctx.ellipse(o.x, o.y + o.r * 0.7, o.r * 0.9, o.r * 0.3, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#00000020'; ctx.fill();
+      ctx.fillStyle = '#3f9142';
+      ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(o.x - o.r * 0.5, o.y + o.r * 0.2, o.r * 0.6, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(o.x + o.r * 0.5, o.y + o.r * 0.2, o.r * 0.6, 0, Math.PI * 2); ctx.fill();
+    } else if (o.type === 'fence') {
+      ctx.fillStyle = '#8a5a2b';
+      ctx.fillRect(o.x, o.y, o.w, o.h);
+      ctx.strokeStyle = '#5c3a1a'; ctx.lineWidth = 1;
+      const planks = o.w > o.h ? Math.round(o.w / 16) : Math.round(o.h / 16);
+      ctx.beginPath();
+      if (o.w > o.h) { for (let i = 1; i < planks; i++) { const px = o.x + i * (o.w / planks); ctx.moveTo(px, o.y); ctx.lineTo(px, o.y + o.h); } }
+      else { for (let i = 1; i < planks; i++) { const py = o.y + i * (o.h / planks); ctx.moveTo(o.x, py); ctx.lineTo(o.x + o.w, py); } }
+      ctx.stroke();
+    } else if (o.type === 'gopherhole') {
+      ctx.beginPath();
+      ctx.ellipse(o.x, o.y, o.r, o.r * 0.65, 0, 0, Math.PI * 2);
+      const holeGrad = ctx.createRadialGradient(o.x, o.y, o.r * 0.15, o.x, o.y, o.r);
+      holeGrad.addColorStop(0, '#0a0805');
+      holeGrad.addColorStop(1, '#2a1c10');
+      ctx.fillStyle = holeGrad;
+      ctx.fill();
+    }
+  }
+
+  // Raised dirt lip drawn separately from the hole interior so it can be
+  // layered on top of a peeking gnome, hiding its lower half as if it's
+  // emerging from underground.
+  drawGopherHoleRim(o) {
+    const ctx = this.ctx;
+    ctx.strokeStyle = '#8a5a2b';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.ellipse(o.x, o.y, o.r + 2, o.r * 0.65 + 2, 0, 0.15 * Math.PI, 1.85 * Math.PI);
+    ctx.stroke();
+    ctx.fillStyle = '#6b4520';
+    ctx.beginPath();
+    ctx.ellipse(o.x, o.y + o.r * 0.55, o.r * 0.9, o.r * 0.3, 0, 0, Math.PI, false);
+    ctx.fill();
+  }
+}
+
+
+/* =========================================================
+   Entry point.
+   ========================================================= */
+
+let GAME = null;
+
+function boot() {
+  GAME = new Game();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+
+
+
+</script>
+</body>
+</html>

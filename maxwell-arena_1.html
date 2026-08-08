@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Maxwell's Arena: Food Frenzy</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #cbb994;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+  canvas {
+    display: block;
+    background: #cbb994;
+  }
+  #hud {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    pointer-events: none;
+    color: #fff;
+  }
+  #timer {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 28px;
+    font-weight: bold;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+  }
+  #leaderboard {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(0,0,0,0.45);
+    border-radius: 10px;
+    padding: 10px 14px;
+    min-width: 180px;
+    pointer-events: none;
+  }
+  #leaderboard h3 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    letter-spacing: 1px;
+    color: #ffd166;
+    text-transform: uppercase;
+  }
+  #leaderboard ol {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  #leaderboard li.player {
+    color: #ffd166;
+    font-weight: bold;
+  }
+  #instructions {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    background: rgba(0,0,0,0.4);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  #gameOverScreen {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    color: #fff;
+    text-align: center;
+    z-index: 10;
+    overflow-y: auto;
+    padding: 20px 0;
+    box-sizing: border-box;
+  }
+  #gameOverScreen h1 {
+    font-size: 42px;
+    color: #ffd166;
+    margin-bottom: 4px;
+  }
+  #gameOverScreen p {
+    font-size: 20px;
+    margin: 6px 0;
+  }
+  #restartBtn {
+    margin-top: 24px;
+    padding: 12px 28px;
+    font-size: 18px;
+    border: none;
+    border-radius: 8px;
+    background: #ffd166;
+    color: #1a1a2e;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  #restartBtn:hover {
+    background: #ffe08a;
+  }
+  .badgeChip {
+    background: rgba(255,209,102,0.15);
+    border: 1px solid #ffd166;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: #ffe9b8;
+  }
+  #startScreen {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background:
+      radial-gradient(circle at 8% 5%, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 20%),
+      radial-gradient(circle at 92% 5%, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 20%),
+      radial-gradient(circle at 15% 25%, #ffd166 0%, transparent 1.2%),
+      radial-gradient(circle at 80% 35%, #4ecdc4 0%, transparent 1.2%),
+      radial-gradient(circle at 60% 15%, #ff6b6b 0%, transparent 1.2%),
+      radial-gradient(circle at 35% 40%, #ffd166 0%, transparent 1%),
+      radial-gradient(circle at 90% 60%, #4ecdc4 0%, transparent 1%),
+      radial-gradient(circle at 10% 65%, #ff6b6b 0%, transparent 1%),
+      radial-gradient(circle at center, #16213e 0%, #0d0d1a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    color: #fff;
+    text-align: center;
+    z-index: 20;
+    overflow-y: auto;
+    padding: 20px 0;
+    box-sizing: border-box;
+  }
+  .crownIcon {
+    font-size: 34px;
+    margin-bottom: -8px;
+    filter: drop-shadow(0 3px 3px rgba(0,0,0,0.5));
+    transform: rotate(-2deg);
+  }
+  #startScreen h1 {
+    font-size: 50px;
+    font-weight: 900;
+    color: #ffd166;
+    margin: 0;
+    letter-spacing: 1px;
+    text-shadow:
+      2px 2px 0 #a5691f, 3px 3px 0 #a5691f,
+      4px 4px 0 #6b4423, 5px 5px 0 #6b4423,
+      0 6px 16px rgba(0,0,0,0.55);
+  }
+  #titleArt {
+    width: 420px;
+    max-width: 88vw;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    margin-top: 8px;
+  }
+  #startScreen .subtitle {
+    font-size: 22px;
+    font-weight: 900;
+    color: #ff8c42;
+    margin-top: 2px;
+    letter-spacing: 5px;
+    text-shadow:
+      2px 2px 0 #7a2e0e, 3px 3px 0 #7a2e0e,
+      0 4px 10px rgba(0,0,0,0.5);
+  }
+  .rulesBoard {
+    margin-top: 14px;
+    background: rgba(0,0,0,0.5);
+    border: 2px dashed #ffd166;
+    border-radius: 10px;
+    padding: 10px 18px;
+    max-width: 320px;
+    text-align: left;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #eee;
+  }
+  .rulesBoard .rulesTitle {
+    font-weight: bold;
+    color: #ffd166;
+    margin-bottom: 4px;
+    font-size: 13px;
+  }
+  #startScreen label {
+    margin-top: 32px;
+    font-size: 15px;
+    color: #ddd;
+  }
+  #catNameInput {
+    margin-top: 10px;
+    padding: 10px 16px;
+    font-size: 18px;
+    border-radius: 8px;
+    border: none;
+    text-align: center;
+    width: 220px;
+  }
+  #startBtn {
+    margin-top: 22px;
+    padding: 14px 36px;
+    font-size: 19px;
+    border: none;
+    border-radius: 8px;
+    background: #ffd166;
+    color: #1a1a2e;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  #startBtn:hover {
+    background: #ffe08a;
+  }
+  #startScreen .hint {
+    margin-top: 26px;
+    font-size: 13px;
+    color: #999;
+    max-width: 360px;
+  }
+  #score {
+    position: absolute;
+    top: 56px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 16px;
+    color: #ffe66d;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+  }
+  #musicControls {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    background: rgba(0,0,0,0.4);
+    padding: 8px 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+  }
+  #muteBtn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0;
+  }
+  #volumeSlider {
+    width: 90px;
+  }
+  #breedGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+    max-width: 420px;
+  }
+  .breedCard {
+    background: rgba(255,255,255,0.06);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 6px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .breedCard:hover {
+    background: rgba(255,255,255,0.12);
+  }
+  .breedCard.selected {
+    border-color: #ffd166;
+    background: rgba(255,209,102,0.15);
+  }
+  .breedCard canvas {
+    display: block;
+    margin: 0 auto;
+  }
+  .breedLabel {
+    font-size: 11px;
+    margin-top: 4px;
+    color: #ddd;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<div id="hud">
+  <div id="timer">2:00</div>
+  <div id="score">Score: 0</div>
+  <div id="leaderboard">
+    <h3>Leaderboard</h3>
+    <ol id="leaderboardList"></ol>
+  </div>
+  <div id="instructions">WASD to move &middot; eat food &middot; absorb smaller cats</div>
+  <div id="musicControls">
+    <button id="muteBtn" title="Mute/unmute">🔊</button>
+    <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.5" title="Volume">
+  </div>
+</div>
+
+<div id="startScreen">
+  <svg id="titleArt" viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="stadiumSky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#191035"/>
+        <stop offset="60%" stop-color="#2a1a4d"/>
+        <stop offset="100%" stop-color="#3d2466"/>
+      </linearGradient>
+      <linearGradient id="stadiumGrass" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#7fc457"/>
+        <stop offset="100%" stop-color="#5da13d"/>
+      </linearGradient>
+      <radialGradient id="spotGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#fff6d0" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="#fff6d0" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+
+    <!-- night sky backdrop -->
+    <rect x="0" y="0" width="480" height="260" fill="url(#stadiumSky)"/>
+
+    <!-- stadium floodlight glows -->
+    <circle cx="55" cy="35" r="55" fill="url(#spotGlow)"/>
+    <circle cx="425" cy="35" r="55" fill="url(#spotGlow)"/>
+    <g fill="#fff6d0">
+      <circle cx="40" cy="30" r="3"/><circle cx="50" cy="24" r="3"/><circle cx="60" cy="30" r="3"/><circle cx="70" cy="24" r="3"/>
+      <circle cx="410" cy="30" r="3"/><circle cx="420" cy="24" r="3"/><circle cx="430" cy="30" r="3"/><circle cx="440" cy="24" r="3"/>
+    </g>
+
+    <!-- confetti -->
+    <g opacity="0.85">
+      <rect x="30" y="60" width="5" height="5" fill="#ff6b6b" transform="rotate(20 30 60)"/>
+      <rect x="120" y="45" width="5" height="5" fill="#4ecdc4" transform="rotate(-15 120 45)"/>
+      <rect x="330" y="55" width="5" height="5" fill="#ffd166" transform="rotate(30 330 55)"/>
+      <rect x="410" y="70" width="5" height="5" fill="#ff6b6b" transform="rotate(-10 410 70)"/>
+      <circle cx="160" cy="65" r="3" fill="#ffd166"/>
+      <circle cx="290" cy="50" r="3" fill="#4ecdc4"/>
+      <circle cx="90" cy="80" r="3" fill="#ff6b6b"/>
+    </g>
+
+    <!-- hanging pennant banners -->
+    <g fill="#6c3fa8">
+      <path d="M 15 20 L 15 70 L 30 58 L 45 70 L 45 20 Z"/>
+      <path d="M 435 20 L 435 70 L 450 58 L 465 70 L 465 20 Z"/>
+      <path d="M 150 15 L 150 55 L 162 46 L 174 55 L 174 15 Z"/>
+      <path d="M 306 15 L 306 55 L 318 46 L 330 55 L 330 15 Z"/>
+    </g>
+    <g fill="#c9a4e8">
+      <path d="M 197 3 15 197 45 205 58 213 45 213 15 Z" opacity="0"/>
+    </g>
+
+    <!-- scoreboards -->
+    <g>
+      <rect x="8" y="20" width="92" height="46" rx="6" fill="#141414" stroke="#c98a3a" stroke-width="3"/>
+      <text x="54" y="42" font-size="18" fill="#7dff8f" text-anchor="middle" font-weight="bold" font-family="monospace">2:00</text>
+      <text x="54" y="58" font-size="8" fill="#ffd166" text-anchor="middle" font-weight="bold">EAT. GET BIG. WIN.</text>
+    </g>
+    <g>
+      <rect x="380" y="20" width="92" height="46" rx="6" fill="#141414" stroke="#c98a3a" stroke-width="3"/>
+      <text x="426" y="40" font-size="9" fill="#ff8fa3" text-anchor="middle" font-weight="bold">BIGGEST CAT</text>
+      <text x="426" y="55" font-size="13" fill="#7dff8f" text-anchor="middle" font-weight="bold">WINS!</text>
+    </g>
+
+    <!-- grass field -->
+    <path d="M 0 175 Q 120 158 240 172 Q 360 186 480 168 L 480 260 L 0 260 Z" fill="url(#stadiumGrass)"/>
+    <path d="M 0 185 Q 120 170 240 182 Q 360 195 480 178 L 480 260 L 0 260 Z" fill="rgba(0,0,0,0.08)"/>
+
+    <!-- small side cats with food, flanking Maxwell -->
+    <g transform="translate(38,140) rotate(-8)">
+      <ellipse cx="0" cy="18" rx="20" ry="15" fill="#d9a066"/>
+      <circle cx="-6" cy="0" r="16" fill="#d9a066"/>
+      <path d="M -18 -8 L -22 -20 L -10 -12 Z" fill="#d9a066"/>
+      <path d="M 6 -8 L 14 -22 L 2 -12 Z" fill="#d9a066"/>
+      <circle cx="-10" cy="-2" r="2" fill="#2b2b2b"/>
+      <circle cx="-2" cy="-2" r="2" fill="#2b2b2b"/>
+      <text x="14" y="6" font-size="20">🍩</text>
+    </g>
+    <g transform="translate(105,158) rotate(6)">
+      <ellipse cx="0" cy="16" rx="18" ry="13" fill="#f1e3c8"/>
+      <circle cx="-4" cy="0" r="14" fill="#f1e3c8"/>
+      <path d="M -15 -6 L -18 -17 L -8 -10 Z" fill="#4a3728"/>
+      <path d="M 6 -6 L 12 -18 L 1 -10 Z" fill="#4a3728"/>
+      <circle cx="-8" cy="-1" r="1.8" fill="#3ea6ff"/>
+      <circle cx="-1" cy="-1" r="1.8" fill="#3ea6ff"/>
+      <text x="10" y="6" font-size="17">🍣</text>
+    </g>
+    <g transform="translate(420,145) rotate(8)">
+      <ellipse cx="0" cy="18" rx="20" ry="15" fill="#f5f0e6"/>
+      <circle cx="6" cy="0" r="16" fill="#f5f0e6"/>
+      <ellipse cx="12" cy="-4" rx="7" ry="6" fill="#2b2b2b"/>
+      <path d="M -6 -8 L -10 -20 L 2 -12 Z" fill="#f5f0e6"/>
+      <path d="M 18 -8 L 22 -20 L 10 -12 Z" fill="#f5f0e6"/>
+      <circle cx="2" cy="-2" r="2" fill="#1a1a2e"/>
+      <circle cx="10" cy="-2" r="2" fill="#1a1a2e"/>
+      <text x="-24" y="8" font-size="19">🐟</text>
+    </g>
+    <g transform="translate(350,162) rotate(-6)">
+      <ellipse cx="0" cy="16" rx="18" ry="13" fill="#e8e8f0"/>
+      <circle cx="-4" cy="0" r="14" fill="#e8e8f0"/>
+      <path d="M -15 -6 L -18 -17 L -8 -10 Z" fill="#e8e8f0"/>
+      <path d="M 6 -6 L 12 -18 L 1 -10 Z" fill="#e8e8f0"/>
+      <circle cx="-8" cy="-1" r="1.8" fill="#ff8fa3"/>
+      <circle cx="-1" cy="-1" r="1.8" fill="#ff8fa3"/>
+      <text x="10" y="4" font-size="16">🍰</text>
+    </g>
+
+    <!-- ===== MAXWELL — big round mascot, sitting and munching a pie ===== -->
+    <g transform="translate(240,200)">
+      <!-- tail curled to the side -->
+      <path d="M 62 20 Q 110 10 108 -35 Q 106 -55 90 -50" stroke="#8a7458" stroke-width="18" stroke-linecap="round" fill="none"/>
+      <!-- back paws -->
+      <ellipse cx="-58" cy="35" rx="20" ry="14" fill="#8a7458"/>
+      <ellipse cx="58" cy="35" rx="20" ry="14" fill="#8a7458"/>
+      <!-- huge round belly body -->
+      <ellipse cx="0" cy="-10" rx="82" ry="68" fill="#8a7458"/>
+      <!-- tabby stripes -->
+      <path d="M -45 -55 Q -35 -35 -42 -12" stroke="#4a3826" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.5"/>
+      <path d="M -10 -66 Q -3 -45 -8 -18" stroke="#4a3826" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.5"/>
+      <path d="M 25 -60 Q 33 -40 27 -15" stroke="#4a3826" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.5"/>
+      <!-- cream belly -->
+      <ellipse cx="0" cy="10" rx="52" ry="42" fill="#f7ecd8"/>
+      <!-- MAXWELL collar tag -->
+      <ellipse cx="0" cy="-36" rx="14" ry="10" fill="#d8a63e" stroke="#8a6a1e" stroke-width="1.5"/>
+      <text x="0" y="-33" font-size="6" fill="#4a3826" text-anchor="middle" font-weight="bold">MAXWELL</text>
+      <!-- front paws holding the pie slice -->
+      <ellipse cx="-30" cy="42" rx="16" ry="20" fill="#8a7458" transform="rotate(18 -30 42)"/>
+      <ellipse cx="30" cy="42" rx="16" ry="20" fill="#8a7458" transform="rotate(-18 30 42)"/>
+      <!-- pie slice -->
+      <path d="M -18 -8 L 22 -14 L 14 20 L -6 22 Z" fill="#e7b563"/>
+      <path d="M -14 -3 L 18 -8 L 12 14 L -3 16 Z" fill="#a8332b"/>
+      <circle cx="-6" cy="4" r="2" fill="#7a1f1a"/>
+      <circle cx="4" cy="0" r="2" fill="#7a1f1a"/>
+      <circle cx="8" cy="8" r="2" fill="#7a1f1a"/>
+
+      <!-- head -->
+      <circle cx="0" cy="-72" r="46" fill="#8a7458"/>
+      <!-- fluffy mane -->
+      <ellipse cx="-38" cy="-52" rx="20" ry="26" fill="#8a7458" opacity="0.9"/>
+      <ellipse cx="38" cy="-52" rx="20" ry="26" fill="#8a7458" opacity="0.9"/>
+      <!-- ears -->
+      <path d="M -32 -100 L -40 -128 L -12 -110 Z" fill="#8a7458"/>
+      <path d="M 32 -100 L 40 -128 L 12 -110 Z" fill="#8a7458"/>
+      <path d="M -30 -104 L -34 -120 L -18 -108 Z" fill="#ffc2d1"/>
+      <path d="M 30 -104 L 34 -120 L 18 -108 Z" fill="#ffc2d1"/>
+      <!-- ear tufts -->
+      <path d="M -40 -128 L -46 -136 L -32 -122 Z" fill="#8a7458"/>
+      <path d="M 40 -128 L 46 -136 L 32 -122 Z" fill="#8a7458"/>
+      <!-- forehead marking -->
+      <path d="M -20 -96 Q 0 -110 20 -96" stroke="#4a3826" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.55"/>
+      <!-- eyes, mid-chew and content -->
+      <ellipse cx="-16" cy="-72" rx="7" ry="9" fill="#c9b93a"/>
+      <ellipse cx="16" cy="-72" rx="7" ry="9" fill="#c9b93a"/>
+      <circle cx="-14" cy="-75" r="2.4" fill="#fff"/>
+      <circle cx="18" cy="-75" r="2.4" fill="#fff"/>
+      <!-- nose -->
+      <path d="M -6 -58 L 6 -58 L 0 -50 Z" fill="#ff8fa3"/>
+      <!-- open munching mouth -->
+      <ellipse cx="0" cy="-44" rx="12" ry="8" fill="#5c2a24"/>
+      <!-- whiskers -->
+      <g stroke="#fff" stroke-width="1.6" opacity="0.85">
+        <line x1="-30" y1="-56" x2="-64" y2="-62"/>
+        <line x1="-30" y1="-50" x2="-64" y2="-48"/>
+        <line x1="30" y1="-56" x2="64" y2="-62"/>
+        <line x1="30" y1="-50" x2="64" y2="-48"/>
+      </g>
+    </g>
+
+    <!-- crumbs on the ground -->
+    <g fill="#a8332b" opacity="0.7">
+      <circle cx="190" cy="248" r="2.5"/>
+      <circle cx="300" cy="252" r="2"/>
+      <circle cx="255" cy="244" r="1.8"/>
+    </g>
+  </svg>
+  <div class="crownIcon">👑</div>
+  <h1>Maxwell's Arena</h1>
+  <div class="subtitle">FOOD FRENZY</div>
+  <div class="rulesBoard">
+    <div class="rulesTitle">🎮 Food Frenzy Rules</div>
+    <div>⏱️ 2 minutes on the clock</div>
+    <div>🍽️ Eat as much as you can</div>
+    <div>📈 Get bigger, absorb smaller cats</div>
+    <div>🏆 Biggest cat when time's up wins</div>
+  </div>
+  <label for="catNameInput">Name your cat:</label><br>
+  <input type="text" id="catNameInput" placeholder="Maxwell" maxlength="14">
+  <br>
+  <label style="margin-top:20px;">Choose your breed:</label>
+  <div id="breedGrid"></div>
+  <br>
+  <button id="startBtn">Start Game</button>
+  <div class="hint">Eat food to grow &middot; healthy food slims you down &middot; sugary food gives a speed boost &middot; absorb smaller cats &middot; biggest cat after 2 minutes wins</div>
+</div>
+
+<div id="gameOverScreen">
+  <h1 id="championName">Champion Cat</h1>
+  <p id="championSize">Peak Size: 0</p>
+  <p id="finalScore">Your Score: 0</p>
+  <div id="badgeList" style="margin-top:14px; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; max-width:420px;"></div>
+  <p>Round Over!</p>
+  <button id="restartBtn">Play Again</button>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+
+// ---- CHIPTUNE BACKGROUND MUSIC (fully synthesized, goofy 8-bit loop — no files needed) ----
+let musicGain = null;
+let musicPlaying = false;
+let musicLoopTimeout = null;
+
+function ensureMusicGain() {
+  if (!sfxContext) return;
+  if (!musicGain) {
+    musicGain = sfxContext.createGain();
+    musicGain.gain.value = 0.35;
+    musicGain.connect(sfxContext.destination);
+  }
+}
+
+function playChipNote(freq, startTime, duration, type, peakGain) {
+  const osc = sfxContext.createOscillator();
+  const g = sfxContext.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, startTime);
+  osc.connect(g);
+  g.connect(musicGain);
+  g.gain.setValueAtTime(0.0001, startTime);
+  g.gain.linearRampToValueAtTime(peakGain, startTime + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  osc.start(startTime);
+  osc.stop(startTime + duration + 0.02);
+}
+
+function playChipTick(startTime, duration, peakGain) {
+  const bufferSize = Math.max(1, Math.floor(sfxContext.sampleRate * duration));
+  const buffer = sfxContext.createBuffer(1, bufferSize, sfxContext.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+  const src = sfxContext.createBufferSource();
+  src.buffer = buffer;
+  const g = sfxContext.createGain();
+  g.gain.setValueAtTime(peakGain, startTime);
+  src.connect(g);
+  g.connect(musicGain);
+  src.start(startTime);
+}
+
+function playChipChirp(startTime, baseFreq, peakGain) {
+  const osc = sfxContext.createOscillator();
+  const g = sfxContext.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(baseFreq, startTime);
+  osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.4, startTime + 0.05);
+  osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.1, startTime + 0.09);
+  osc.connect(g);
+  g.connect(musicGain);
+  g.gain.setValueAtTime(0.0001, startTime);
+  g.gain.linearRampToValueAtTime(peakGain, startTime + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.11);
+  osc.start(startTime);
+  osc.stop(startTime + 0.12);
+}
+
+const CHIP_STEP = 0.17; // seconds per step — relaxed, breezy tempo
+// A bright, bouncy major-key tune (C major), evoking a sunny spring day; 0 = rest
+const CHIP_MELODY = [
+  523.25, 587.33, 659.25, 783.99,  880.00, 783.99, 659.25, 587.33,
+  523.25, 659.25, 783.99, 1046.50, 880.00, 783.99, 659.25, 523.25,
+  587.33, 659.25, 783.99, 880.00,  1046.50, 880.00, 783.99, 659.25,
+  587.33, 523.25, 587.33, 659.25,  783.99, 659.25, 587.33, 523.25
+];
+// Gentle I–IV–V–I progression underneath (C–F–G–C)
+const CHIP_BASS = [130.81, 0, 174.61, 0, 196.00, 0, 130.81, 0];
+// Sparse high twinkles, like distant birdsong — sprinkled at a few points in the bar
+const CHIP_CHIRPS = [
+  { step: 6.5, freq: 2093.00 },
+  { step: 14.5, freq: 2349.32 },
+  { step: 22.5, freq: 2637.02 },
+  { step: 29.5, freq: 2093.00 }
+];
+
+function scheduleChiptuneBar(startTime) {
+  const urgency = (gameRunning && typeof timeLeft === 'number' && timeLeft <= 15)
+    ? Math.max(0, Math.min(1, (15 - timeLeft) / 15))
+    : 0;
+  const stepDur = CHIP_STEP * (1 - urgency * 0.35); // up to 35% faster near the end
+  const pitchMul = 1 + urgency * 0.12; // up to 12% higher pitch near the end
+
+  CHIP_MELODY.forEach((freq, i) => {
+    if (freq > 0) playChipNote(freq * pitchMul, startTime + i * stepDur, stepDur * 0.9, 'triangle', 0.16);
+  });
+  CHIP_BASS.forEach((freq, i) => {
+    if (freq > 0) playChipNote(freq * pitchMul, startTime + i * stepDur * 4, stepDur * 3.6, 'sine', 0.16);
+  });
+  CHIP_CHIRPS.forEach(c => {
+    playChipChirp(startTime + c.step * stepDur, c.freq * pitchMul, 0.05);
+  });
+  return CHIP_MELODY.length * stepDur;
+}
+
+function chiptuneLoop() {
+  if (!musicPlaying || !sfxContext) return;
+  const startTime = sfxContext.currentTime + 0.05;
+  const duration = scheduleChiptuneBar(startTime);
+  musicLoopTimeout = setTimeout(chiptuneLoop, duration * 1000);
+}
+
+function startChiptuneMusic() {
+  ensureAudioContext();
+  ensureMusicGain();
+  if (musicPlaying) return;
+  musicPlaying = true;
+  chiptuneLoop();
+}
+
+function stopChiptuneMusic() {
+  musicPlaying = false;
+  if (musicLoopTimeout) clearTimeout(musicLoopTimeout);
+}
+
+// ---- TITLE SCREEN MUSIC (ice-cream-truck-style bell jingle, fully synthesized) ----
+let titleMusicPlaying = false;
+let titleMusicLoopTimeout = null;
+
+function playBellNote(freq, startTime, duration, peakGain) {
+  // fundamental tone
+  const osc1 = sfxContext.createOscillator();
+  const g1 = sfxContext.createGain();
+  osc1.type = 'sine';
+  osc1.frequency.setValueAtTime(freq, startTime);
+  osc1.connect(g1);
+  g1.connect(musicGain);
+  g1.gain.setValueAtTime(0.0001, startTime);
+  g1.gain.linearRampToValueAtTime(peakGain, startTime + 0.006);
+  g1.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  osc1.start(startTime);
+  osc1.stop(startTime + duration + 0.02);
+
+  // slightly detuned high overtone for that plinky music-box shimmer
+  const osc2 = sfxContext.createOscillator();
+  const g2 = sfxContext.createGain();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(freq * 2.01, startTime);
+  osc2.connect(g2);
+  g2.connect(musicGain);
+  g2.gain.setValueAtTime(0.0001, startTime);
+  g2.gain.linearRampToValueAtTime(peakGain * 0.3, startTime + 0.006);
+  g2.gain.exponentialRampToValueAtTime(0.0001, startTime + duration * 0.55);
+  osc2.start(startTime);
+  osc2.stop(startTime + duration * 0.55 + 0.02);
+}
+
+const TITLE_STEP = 0.24; // slow, waltz-like bell tempo
+// A bright, plinky bell melody evoking an ice cream truck jingle; 0 = rest
+const TITLE_MELODY = [
+  1046.50, 1318.51, 1567.98, 1318.51, 1046.50, 0, 1174.66, 1046.50,
+  1318.51, 1567.98, 1760.00, 1567.98, 1318.51, 0, 1046.50, 0,
+  1174.66, 1318.51, 1567.98, 1318.51, 1174.66, 0, 1046.50, 1174.66,
+  1318.51, 1046.50, 880.00, 1046.50, 0, 0, 1046.50, 0
+];
+
+function scheduleTitleBar(startTime) {
+  TITLE_MELODY.forEach((freq, i) => {
+    if (freq > 0) playBellNote(freq, startTime + i * TITLE_STEP, TITLE_STEP * 1.6, 0.13);
+  });
+  return TITLE_MELODY.length * TITLE_STEP;
+}
+
+function titleMusicLoop() {
+  if (!titleMusicPlaying || !sfxContext) return;
+  const startTime = sfxContext.currentTime + 0.05;
+  const duration = scheduleTitleBar(startTime);
+  titleMusicLoopTimeout = setTimeout(titleMusicLoop, duration * 1000);
+}
+
+function startTitleMusic() {
+  ensureAudioContext();
+  ensureMusicGain();
+  if (titleMusicPlaying || musicPlaying) return;
+  titleMusicPlaying = true;
+  titleMusicLoop();
+}
+
+function stopTitleMusic() {
+  titleMusicPlaying = false;
+  if (titleMusicLoopTimeout) clearTimeout(titleMusicLoopTimeout);
+}
+
+// ---- SOUND EFFECTS (synthesized, no external audio files needed) ----
+let sfxContext = null;
+let sfxVolume = 0.5;
+let masterVolume = 0.5;
+let isMuted = false;
+
+function ensureAudioContext() {
+  if (!sfxContext) {
+    sfxContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (sfxContext.state === 'suspended') sfxContext.resume();
+}
+
+function playEatSound(food) {
+  if (!sfxContext) return;
+  const now = sfxContext.currentTime;
+  const osc = sfxContext.createOscillator();
+  const gain = sfxContext.createGain();
+  osc.connect(gain);
+  gain.connect(sfxContext.destination);
+
+  if (food.healthy) {
+    // soft, gentle descending chime for healthy/slimming food
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(700, now);
+    osc.frequency.exponentialRampToValueAtTime(420, now + 0.15);
+    gain.gain.setValueAtTime(sfxVolume * 0.5, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    osc.start(now);
+    osc.stop(now + 0.18);
+  } else if (food.sugary) {
+    // bright, quick ascending sparkle for the speed-boost sugary food
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(500, now);
+    osc.frequency.exponentialRampToValueAtTime(1100, now + 0.12);
+    gain.gain.setValueAtTime(sfxVolume * 0.6, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+    osc.start(now);
+    osc.stop(now + 0.22);
+    // add a quick second sparkle layer
+    const osc2 = sfxContext.createOscillator();
+    const gain2 = sfxContext.createGain();
+    osc2.connect(gain2);
+    gain2.connect(sfxContext.destination);
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(1400, now + 0.06);
+    gain2.gain.setValueAtTime(sfxVolume * 0.3, now + 0.06);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+    osc2.start(now + 0.06);
+    osc2.stop(now + 0.22);
+  } else {
+    // simple satisfying "pop" for regular food, pitched slightly by richness
+    const pitch = 380 + Math.min(food.growth, 3) * 40;
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(pitch, now);
+    osc.frequency.exponentialRampToValueAtTime(pitch * 0.6, now + 0.1);
+    gain.gain.setValueAtTime(sfxVolume * 0.4, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    osc.start(now);
+    osc.stop(now + 0.12);
+  }
+}
+
+function playAbsorbSound() {
+  if (!sfxContext) return;
+  const now = sfxContext.currentTime;
+  const osc = sfxContext.createOscillator();
+  const gain = sfxContext.createGain();
+  osc.connect(gain);
+  gain.connect(sfxContext.destination);
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(300, now);
+  osc.frequency.exponentialRampToValueAtTime(90, now + 0.3);
+  gain.gain.setValueAtTime(sfxVolume * 0.5, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+  osc.start(now);
+  osc.stop(now + 0.32);
+}
+
+function playSqueakSound() {
+  if (!sfxContext) return;
+  const now = sfxContext.currentTime;
+  const osc = sfxContext.createOscillator();
+  const gain = sfxContext.createGain();
+  osc.connect(gain);
+  gain.connect(sfxContext.destination);
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(1400, now);
+  osc.frequency.exponentialRampToValueAtTime(2000, now + 0.05);
+  osc.frequency.exponentialRampToValueAtTime(900, now + 0.15);
+  gain.gain.setValueAtTime(sfxVolume * 0.3, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+  osc.start(now);
+  osc.stop(now + 0.17);
+}
+
+function playFrenzySound() {
+  if (!sfxContext) return;
+  const now = sfxContext.currentTime;
+  const notes = [523.25, 659.25, 783.99, 1046.50];
+  notes.forEach((freq, i) => {
+    const osc = sfxContext.createOscillator();
+    const gain = sfxContext.createGain();
+    osc.connect(gain);
+    gain.connect(sfxContext.destination);
+    osc.type = 'triangle';
+    const t = now + i * 0.08;
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(sfxVolume * 0.4, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    osc.start(t);
+    osc.stop(t + 0.22);
+  });
+}
+
+function playMeowSound() {
+  if (!sfxContext) return;
+  const now = sfxContext.currentTime;
+  const osc = sfxContext.createOscillator();
+  const gain = sfxContext.createGain();
+  osc.connect(gain);
+  gain.connect(sfxContext.destination);
+  osc.type = 'sawtooth';
+  // "me-" rising chirp
+  osc.frequency.setValueAtTime(320, now);
+  osc.frequency.exponentialRampToValueAtTime(620, now + 0.09);
+  // "-ow" falling slide with a little vibrato wobble
+  osc.frequency.exponentialRampToValueAtTime(260, now + 0.32);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.linearRampToValueAtTime(sfxVolume * 0.5, now + 0.05);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+  osc.start(now);
+  osc.stop(now + 0.38);
+}
+
+function playPurrSound(duration) {
+  if (!sfxContext) return;
+  const now = sfxContext.currentTime;
+  // low rumbling carrier
+  const carrier = sfxContext.createOscillator();
+  const carrierGain = sfxContext.createGain();
+  carrier.type = 'triangle';
+  carrier.frequency.setValueAtTime(45, now);
+  carrier.connect(carrierGain);
+  carrierGain.connect(sfxContext.destination);
+
+  // LFO modulates the carrier's volume to create the pulsing "purr" texture
+  const lfo = sfxContext.createOscillator();
+  const lfoGain = sfxContext.createGain();
+  lfo.type = 'sine';
+  lfo.frequency.setValueAtTime(24, now);
+  lfoGain.gain.setValueAtTime(sfxVolume * 0.15, now);
+  lfo.connect(lfoGain);
+  lfoGain.connect(carrierGain.gain);
+
+  carrierGain.gain.setValueAtTime(sfxVolume * 0.12, now);
+  carrierGain.gain.linearRampToValueAtTime(sfxVolume * 0.001, now + duration);
+
+  carrier.start(now);
+  lfo.start(now);
+  carrier.stop(now + duration);
+  lfo.stop(now + duration);
+}
+
+document.getElementById('muteBtn').addEventListener('click', () => {
+  isMuted = !isMuted;
+  applyVolume();
+  document.getElementById('muteBtn').textContent = isMuted ? '🔇' : '🔊';
+});
+
+document.getElementById('volumeSlider').addEventListener('input', (e) => {
+  masterVolume = parseFloat(e.target.value);
+  if (masterVolume > 0 && isMuted) {
+    isMuted = false;
+    document.getElementById('muteBtn').textContent = '🔊';
+  }
+  applyVolume();
+});
+
+function applyVolume() {
+  const vol = isMuted ? 0 : masterVolume;
+  sfxVolume = vol;
+  if (musicGain) musicGain.gain.value = vol * 0.7;
+}
+
+// ---- CONFIG ----
+const WORLD_SIZE = 4500;
+const BASE_RADIUS = 12;
+const FOOD_COUNT = 180;
+const AI_CAT_COUNT = 8; // between 5 and 10
+const ROUND_TIME = 120; // seconds
+const GROWTH_PER_FOOD = 0.5;
+const MAX_RADIUS = 500;
+const ABSORB_THRESHOLD = 1.15; // must be 15% bigger to absorb
+const ABSORB_GROWTH_FACTOR = 0.5; // absorber gains this fraction of the eaten cat's size
+
+const AI_NAMES = [
+  "Whiskers", "Mittens", "Tuna", "Biscuit", "Shadow",
+  "Peanut", "Cleo", "Ziggy", "Luna", "Pepper"
+];
+
+// Cat breeds: body color, coat pattern, eye color, and a few structural quirks.
+// pattern options: 'stripes', 'spots', 'patches', 'points', 'solid', 'none'
+const BREEDS = [
+  { id: 'mainecoon', name: 'Maine Coon',   bodyColor: '#8a7458', pattern: 'stripes', patternColor: 'rgba(60,40,20,0.4)',  eyeColor: '#c9b93a', earTuft: true,  tailThickness: 1.5, longFur: true },
+  { id: 'sphynx',    name: 'Sphynx',       bodyColor: '#d9a066', pattern: 'none',    patternColor: null,                  eyeColor: '#2e86ab', earSize: 1.3,   wrinkles: true, tailThickness: 0.8 },
+  { id: 'siamese',   name: 'Siamese',      bodyColor: '#f1e3c8', pattern: 'points',  patternColor: '#4a3728',             eyeColor: '#3ea6ff', tailThickness: 1 },
+  { id: 'calico',    name: 'Calico',       bodyColor: '#f5f0e6', pattern: 'patches', patternColor: ['#e08a3e', '#2b2b2b'],eyeColor: '#1a1a2e', tailThickness: 1, longFur: true },
+  { id: 'blackcat',  name: 'Black Cat',    bodyColor: '#2b2b2b', pattern: 'solid',   patternColor: null,                  eyeColor: '#4caf50', chestPatch: true, tailThickness: 1 },
+  { id: 'bengal',    name: 'Bengal',       bodyColor: '#d98e3f', pattern: 'spots',   patternColor: '#5c3a1e',             eyeColor: '#1a1a2e', tailThickness: 1 },
+  { id: 'tabby',     name: 'Orange Tabby', bodyColor: '#e08a3e', pattern: 'stripes', patternColor: 'rgba(90,45,10,0.35)', eyeColor: '#f4a300', tailThickness: 1 },
+  { id: 'persian',   name: 'Persian',      bodyColor: '#e8e8f0', pattern: 'solid',   patternColor: null,                  eyeColor: '#ff8fa3', fluffy: true,  tailThickness: 1.3, longFur: true }
+];
+
+// Food table: emoji, growth value (negative = healthy/slimming), spawn weight,
+// points (always positive, feeds the unlimited score counter), and flags
+const FOOD_TYPES = [
+  { emoji: "🥗", growth: -0.6, weight: 28, points: -10, healthy: true, salad: true },
+  { emoji: "🍎", growth: -0.3, weight: 9,  points: 8,  healthy: true },
+  { emoji: "🐟", growth: -0.2, weight: 8,  points: 8,  healthy: true },
+  { emoji: "🍣", growth: 0.6,  weight: 8,  points: 15 },
+  { emoji: "🍕", growth: 1.4,  weight: 5,  points: 25 },
+  { emoji: "🍔", growth: 1.6,  weight: 5,  points: 28 },
+  { emoji: "🍖", growth: 2.2,  weight: 3,  points: 35 },
+  { emoji: "🍩", growth: 1.2,  weight: 6,  points: 22, sugary: true },
+  { emoji: "🎂", growth: 2.6,  weight: 2,  points: 40, sugary: true },
+  { emoji: "🥧", growth: 2.4,  weight: 2,  points: 38, sugary: true },
+  { emoji: "🥩", growth: 4.0,  weight: 1,  points: 80, jackpot: true },
+  { emoji: "🌿", growth: 0.5,  weight: 1,  points: 30, catnip: true }
+];
+const FOOD_WEIGHT_TOTAL = FOOD_TYPES.reduce((sum, f) => sum + f.weight, 0);
+const SPEED_BOOST_DURATION = 2; // seconds
+const SPEED_BOOST_MULTIPLIER = 1.7;
+const FRENZY_DURATION = 5; // seconds — catnip lets a cat absorb anything, regardless of size
+const MIN_RADIUS = 6;
+
+function pickFoodType() {
+  let r = Math.random() * FOOD_WEIGHT_TOTAL;
+  for (const type of FOOD_TYPES) {
+    if (r < type.weight) return type;
+    r -= type.weight;
+  }
+  return FOOD_TYPES[0];
+}
+
+// ---- STATE ----
+let keys = {};
+let food = [];
+let cats = [];
+let yardDecor = [];
+let player;
+let timeLeft = ROUND_TIME;
+let gameRunning = true;
+let peakSizeOverall = BASE_RADIUS;
+let peakSizeName = "Maxwell";
+let lastTime = performance.now();
+
+// mouse bonus
+let mouse = null;
+let mouseSpawnTimer = 8;
+let timerAccumulator = 0;
+
+// ---- INPUT ----
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+document.getElementById('startBtn').addEventListener('click', () => {
+  const name = document.getElementById('catNameInput').value.trim();
+  document.getElementById('startScreen').style.display = 'none';
+  stopTitleMusic();
+  startChiptuneMusic();
+  initGame(name, selectedBreed);
+});
+document.getElementById('catNameInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('startBtn').click();
+});
+document.getElementById('restartBtn').addEventListener('click', () => {
+  document.getElementById('gameOverScreen').style.display = 'none';
+  document.getElementById('startScreen').style.display = 'flex';
+  stopChiptuneMusic();
+  startTitleMusic();
+});
+
+// Start the title screen jingle on the very first interaction (browsers require a user gesture)
+document.addEventListener('click', function firstInteraction() {
+  if (document.getElementById('startScreen').style.display !== 'none') {
+    startTitleMusic();
+  }
+}, { once: true });
+
+// ---- HELPERS ----
+function randomColor() {
+  const colors = ['#e94560', '#0f3460', '#53354a', '#903749', '#84a98c', '#457b9d', '#f4a261', '#2a9d8f', '#c9184a', '#4361ee'];
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
+function createCat(name, isPlayer, breed) {
+  return {
+    name: name,
+    isPlayer: isPlayer,
+    alive: true,
+    x: Math.random() * WORLD_SIZE,
+    y: Math.random() * WORLD_SIZE,
+    radius: BASE_RADIUS,
+    color: breed.bodyColor,
+    breed: breed,
+    targetFood: null,
+    score: 0,
+    moveDirX: 0,
+    speedBoostTimer: 0,
+    frenzyTimer: 0,
+    foodEatenCount: 0,
+    saladCount: 0,
+    jackpotCount: 0,
+    catnipCount: 0,
+    mouseCaughtCount: 0,
+    absorbCount: 0,
+    timesAbsorbed: 0
+  };
+}
+
+function spawnFood() {
+  const type = pickFoodType();
+  return {
+    x: Math.random() * WORLD_SIZE,
+    y: Math.random() * WORLD_SIZE,
+    radius: 10 + Math.abs(type.growth) * 3,
+    emoji: type.emoji,
+    growth: type.growth,
+    points: type.points,
+    sugary: !!type.sugary,
+    healthy: !!type.healthy,
+    salad: !!type.salad,
+    jackpot: !!type.jackpot,
+    catnip: !!type.catnip
+  };
+}
+
+function resetCat(cat) {
+  cat.radius = BASE_RADIUS;
+  cat.x = Math.random() * WORLD_SIZE;
+  cat.y = Math.random() * WORLD_SIZE;
+  cat.targetFood = null;
+  cat.moveDirX = 0;
+  cat.speedBoostTimer = 0;
+  cat.frenzyTimer = 0;
+  // score and lifetime stats are intentionally NOT reset here — they persist for the whole round
+}
+
+function speedForRadius(cat) {
+  const minSpeed = 1.0;
+  const maxSpeed = 3.4;
+  const t = Math.min(1, (cat.radius - BASE_RADIUS) / (MAX_RADIUS - BASE_RADIUS));
+  let speed = maxSpeed - t * (maxSpeed - minSpeed);
+  if (cat.speedBoostTimer > 0) speed *= SPEED_BOOST_MULTIPLIER;
+  if (cat.frenzyTimer > 0) speed *= 1.3;
+  return speed;
+}
+
+// ---- INIT ----
+const YARD_DECOR_TYPES = ['🌼', '🌸', '🌷', '🪨', '🌳', '🍂', '🌻'];
+
+function generateYardDecor() {
+  const decor = [];
+  const count = 55;
+  for (let i = 0; i < count; i++) {
+    decor.push({
+      x: Math.random() * WORLD_SIZE,
+      y: Math.random() * WORLD_SIZE,
+      emoji: YARD_DECOR_TYPES[Math.floor(Math.random() * YARD_DECOR_TYPES.length)],
+      size: 18 + Math.random() * 14
+    });
+  }
+  return decor;
+}
+
+function initGame(playerName, breed) {
+  food = [];
+  for (let i = 0; i < FOOD_COUNT; i++) food.push(spawnFood());
+  yardDecor = generateYardDecor();
+
+  cats = [];
+  player = createCat(playerName || "Maxwell", true, breed);
+  cats.push(player);
+
+  const shuffledNames = [...AI_NAMES].sort(() => Math.random() - 0.5);
+  const shuffledBreeds = [...BREEDS].sort(() => Math.random() - 0.5);
+  for (let i = 0; i < AI_CAT_COUNT; i++) {
+    const aiBreed = shuffledBreeds[i % shuffledBreeds.length];
+    cats.push(createCat(shuffledNames[i % shuffledNames.length], false, aiBreed));
+  }
+
+  timeLeft = ROUND_TIME;
+  peakSizeOverall = BASE_RADIUS;
+  peakSizeName = player.name;
+  gameRunning = true;
+  lastTime = performance.now();
+  timerAccumulator = 0;
+
+  mouse = null;
+  mouseSpawnTimer = 8 + Math.random() * 6;
+
+  requestAnimationFrame(gameLoop);
+}
+
+// ---- UPDATE: PLAYER ----
+function updatePlayer(dt) {
+  let dx = 0, dy = 0;
+  if (keys['w'] || keys['arrowup']) dy -= 1;
+  if (keys['s'] || keys['arrowdown']) dy += 1;
+  if (keys['a'] || keys['arrowleft']) dx -= 1;
+  if (keys['d'] || keys['arrowright']) dx += 1;
+
+  const len = Math.hypot(dx, dy);
+  if (len > 0) {
+    dx /= len; dy /= len;
+    const speed = speedForRadius(player);
+    player.x += dx * speed * dt * 60;
+    player.y += dy * speed * dt * 60;
+  }
+  if (dx !== 0) player.moveDirX = dx;
+  else player.moveDirX *= 0.9; // ease back toward centered when idle
+
+  if (player.speedBoostTimer > 0) player.speedBoostTimer -= dt;
+  if (player.frenzyTimer > 0) player.frenzyTimer -= dt;
+
+  player.x = Math.max(player.radius, Math.min(WORLD_SIZE - player.radius, player.x));
+  player.y = Math.max(player.radius, Math.min(WORLD_SIZE - player.radius, player.y));
+}
+
+// ---- UPDATE: AI ----
+function updateAI(cat, dt) {
+  if (!cat.targetFood || !food.includes(cat.targetFood)) {
+    let nearest = null, nearestDist = Infinity;
+    for (const f of food) {
+      const d = Math.hypot(f.x - cat.x, f.y - cat.y);
+      if (d < nearestDist) { nearestDist = d; nearest = f; }
+    }
+    cat.targetFood = nearest;
+  }
+
+  if (cat.targetFood) {
+    const dx = cat.targetFood.x - cat.x;
+    const dy = cat.targetFood.y - cat.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const speed = speedForRadius(cat);
+    const ndx = dx / len, ndy = dy / len;
+    cat.x += ndx * speed * dt * 60;
+    cat.y += ndy * speed * dt * 60;
+    if (Math.abs(ndx) > 0.05) cat.moveDirX = ndx;
+  }
+
+  if (cat.speedBoostTimer > 0) cat.speedBoostTimer -= dt;
+  if (cat.frenzyTimer > 0) cat.frenzyTimer -= dt;
+
+  cat.x = Math.max(cat.radius, Math.min(WORLD_SIZE - cat.radius, cat.x));
+  cat.y = Math.max(cat.radius, Math.min(WORLD_SIZE - cat.radius, cat.y));
+}
+
+// ---- COLLISIONS ----
+function handleFoodCollisions() {
+  for (const cat of cats) {
+    for (let i = food.length - 1; i >= 0; i--) {
+      const f = food[i];
+      const d = Math.hypot(cat.x - f.x, cat.y - f.y);
+      if (d < cat.radius + f.radius) {
+        food.splice(i, 1);
+        cat.radius = Math.max(MIN_RADIUS, Math.min(MAX_RADIUS, cat.radius + f.growth));
+        cat.score += f.points;
+        cat.foodEatenCount++;
+        if (f.salad) cat.saladCount++;
+        if (f.jackpot) cat.jackpotCount++;
+        if (f.sugary) {
+          cat.speedBoostTimer = SPEED_BOOST_DURATION;
+          if (cat.isPlayer) playPurrSound(SPEED_BOOST_DURATION);
+        }
+        if (f.catnip) {
+          cat.frenzyTimer = FRENZY_DURATION;
+          cat.catnipCount++;
+          if (cat.isPlayer) playFrenzySound();
+        }
+        if (cat.isPlayer) playEatSound(f);
+        if (cat.radius > peakSizeOverall) {
+          peakSizeOverall = cat.radius;
+          peakSizeName = cat.name;
+        }
+        food.push(spawnFood());
+      }
+    }
+  }
+}
+
+function handleCatCollisions() {
+  for (let i = 0; i < cats.length; i++) {
+    const a = cats[i];
+    for (let j = 0; j < cats.length; j++) {
+      if (i === j) continue;
+      const b = cats[j];
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      const canAbsorb = a.radius > b.radius * ABSORB_THRESHOLD || a.frenzyTimer > 0;
+      if (d < a.radius + b.radius * 0.6 && canAbsorb) {
+        if (a.isPlayer || b.isPlayer) playAbsorbSound();
+        a.absorbCount++;
+        b.timesAbsorbed++;
+        a.radius = Math.min(MAX_RADIUS, a.radius + b.radius * ABSORB_GROWTH_FACTOR);
+        if (a.radius > peakSizeOverall) {
+          peakSizeOverall = a.radius;
+          peakSizeName = a.name;
+        }
+        resetCat(b);
+      }
+    }
+  }
+}
+
+// ---- MOUSE BONUS ----
+const MOUSE_RESPAWN_MIN = 15;
+const MOUSE_RESPAWN_MAX = 26;
+const MOUSE_DETECT_RANGE = 220;
+
+function spawnMouse() {
+  mouse = {
+    x: Math.random() * WORLD_SIZE,
+    y: Math.random() * WORLD_SIZE,
+    radius: 10,
+    speed: 2.7
+  };
+}
+
+function updateMouse(dt) {
+  if (!mouse) {
+    mouseSpawnTimer -= dt;
+    if (mouseSpawnTimer <= 0) spawnMouse();
+    return;
+  }
+
+  let nearest = null, nearestDist = Infinity;
+  for (const cat of cats) {
+    const d = Math.hypot(cat.x - mouse.x, cat.y - mouse.y);
+    if (d < nearestDist) { nearestDist = d; nearest = cat; }
+  }
+
+  if (nearest && nearestDist < MOUSE_DETECT_RANGE) {
+    const dx = mouse.x - nearest.x, dy = mouse.y - nearest.y;
+    const len = Math.hypot(dx, dy) || 1;
+    mouse.x += (dx / len) * mouse.speed * dt * 60;
+    mouse.y += (dy / len) * mouse.speed * dt * 60;
+  } else {
+    mouse.x += (Math.random() - 0.5) * 0.6;
+    mouse.y += (Math.random() - 0.5) * 0.6;
+  }
+  mouse.x = Math.max(mouse.radius, Math.min(WORLD_SIZE - mouse.radius, mouse.x));
+  mouse.y = Math.max(mouse.radius, Math.min(WORLD_SIZE - mouse.radius, mouse.y));
+
+  for (const cat of cats) {
+    const d = Math.hypot(cat.x - mouse.x, cat.y - mouse.y);
+    if (d < cat.radius + mouse.radius) {
+      cat.radius = Math.min(MAX_RADIUS, cat.radius * 1.1);
+      cat.score += 50;
+      cat.mouseCaughtCount++;
+      if (cat.radius > peakSizeOverall) {
+        peakSizeOverall = cat.radius;
+        peakSizeName = cat.name;
+      }
+      if (cat.isPlayer) playSqueakSound();
+      mouse = null;
+      mouseSpawnTimer = MOUSE_RESPAWN_MIN + Math.random() * (MOUSE_RESPAWN_MAX - MOUSE_RESPAWN_MIN);
+      break;
+    }
+  }
+}
+
+// ---- WEATHER ----
+// ---- CAMERA ----
+function getCameraZoom() {
+  const t = Math.min(1, (player.radius - BASE_RADIUS) / (MAX_RADIUS - BASE_RADIUS));
+  return 1 - t * 0.88; // zooms out to 0.12x at max size to keep huge cats on screen
+}
+
+// ---- RENDER ----
+function drawCatShape(targetCtx, sx, sy, r, breed, opts) {
+  opts = opts || {};
+  const isPlayer = !!opts.isPlayer;
+  const moveDirX = opts.moveDirX || 0;
+  const name = opts.name;
+  const earScale = breed.earSize || 1;
+  const earColor = breed.pattern === 'points' ? breed.patternColor : breed.bodyColor;
+  const tailColor = breed.pattern === 'points' ? breed.patternColor : breed.bodyColor;
+  const tailThickness = breed.tailThickness || 1;
+
+  if (opts.frenzy) {
+    const pulse = 1 + Math.sin(performance.now() * 0.012) * 0.06;
+    targetCtx.beginPath();
+    targetCtx.arc(sx, sy, r * 1.2 * pulse, 0, Math.PI * 2);
+    targetCtx.strokeStyle = 'rgba(190,90,255,0.7)';
+    targetCtx.lineWidth = Math.max(2, r * 0.16);
+    targetCtx.stroke();
+  }
+
+  // fluffy halo (Persian) — soft extra fur silhouette behind everything
+  if (breed.fluffy) {
+    targetCtx.beginPath();
+    targetCtx.arc(sx, sy, r * 1.18, 0, Math.PI * 2);
+    targetCtx.fillStyle = 'rgba(255,255,255,0.25)';
+    targetCtx.fill();
+  }
+
+  // tail (drawn behind body) — swings opposite the direction of horizontal movement
+  const tailSwing = -moveDirX * r * 0.6;
+  targetCtx.beginPath();
+  targetCtx.moveTo(sx - r * 0.1, sy + r * 0.7);
+  targetCtx.quadraticCurveTo(sx - r * 1.6 + tailSwing, sy + r * 0.9, sx - r * 1.5 + tailSwing * 1.3, sy - r * 0.3);
+  targetCtx.lineWidth = Math.max(2, r * 0.28 * tailThickness);
+  targetCtx.strokeStyle = tailColor;
+  targetCtx.lineCap = 'round';
+  targetCtx.stroke();
+
+  // ears
+  targetCtx.beginPath();
+  targetCtx.moveTo(sx - r * 0.6 * earScale, sy - r * 0.7);
+  targetCtx.lineTo(sx - r * 0.95 * earScale, sy - r * 1.5 * earScale);
+  targetCtx.lineTo(sx - r * 0.15, sy - r * 0.95);
+  targetCtx.closePath();
+  targetCtx.moveTo(sx + r * 0.6 * earScale, sy - r * 0.7);
+  targetCtx.lineTo(sx + r * 0.95 * earScale, sy - r * 1.5 * earScale);
+  targetCtx.lineTo(sx + r * 0.15, sy - r * 0.95);
+  targetCtx.closePath();
+  targetCtx.fillStyle = earColor;
+  targetCtx.fill();
+  targetCtx.strokeStyle = 'rgba(0,0,0,0.25)';
+  targetCtx.lineWidth = 1.5;
+  targetCtx.stroke();
+
+  // ear tufts (Maine Coon)
+  if (breed.earTuft) {
+    for (const dir of [-1, 1]) {
+      targetCtx.beginPath();
+      targetCtx.moveTo(sx + dir * r * 0.95 * earScale, sy - r * 1.5 * earScale);
+      targetCtx.lineTo(sx + dir * r * 1.05 * earScale, sy - r * 1.75 * earScale);
+      targetCtx.lineTo(sx + dir * r * 0.75 * earScale, sy - r * 1.42 * earScale);
+      targetCtx.closePath();
+      targetCtx.fillStyle = breed.bodyColor;
+      targetCtx.fill();
+    }
+  }
+
+  // inner ears
+  targetCtx.beginPath();
+  targetCtx.moveTo(sx - r * 0.55 * earScale, sy - r * 0.82);
+  targetCtx.lineTo(sx - r * 0.72 * earScale, sy - r * 1.22 * earScale);
+  targetCtx.lineTo(sx - r * 0.32, sy - r * 0.95);
+  targetCtx.closePath();
+  targetCtx.moveTo(sx + r * 0.55 * earScale, sy - r * 0.82);
+  targetCtx.lineTo(sx + r * 0.72 * earScale, sy - r * 1.22 * earScale);
+  targetCtx.lineTo(sx + r * 0.32, sy - r * 0.95);
+  targetCtx.closePath();
+  targetCtx.fillStyle = '#ffc2d1';
+  targetCtx.fill();
+
+  // head/body
+  targetCtx.beginPath();
+  targetCtx.arc(sx, sy, r, 0, Math.PI * 2);
+  targetCtx.fillStyle = breed.bodyColor;
+  targetCtx.fill();
+  targetCtx.lineWidth = isPlayer ? 3 : 2;
+  targetCtx.strokeStyle = isPlayer ? '#fff' : 'rgba(255,255,255,0.5)';
+  targetCtx.stroke();
+
+  // fuzzy fur texture around the body edge — longer/denser for long-haired breeds
+  const furCount = breed.longFur ? 26 : 14;
+  const furLen = (breed.longFur ? 0.16 : 0.09) * r;
+  targetCtx.strokeStyle = 'rgba(0,0,0,0.12)';
+  targetCtx.lineWidth = Math.max(0.6, r * 0.025);
+  for (let i = 0; i < furCount; i++) {
+    const angle = (i / furCount) * Math.PI * 2;
+    if (angle > -Math.PI * 0.35 && angle < Math.PI * 0.35) continue; // skip near the face
+    const ex = sx + Math.cos(angle) * r;
+    const ey = sy + Math.sin(angle) * r;
+    const tx = sx + Math.cos(angle) * (r + furLen);
+    const ty = sy + Math.sin(angle) * (r + furLen);
+    targetCtx.beginPath();
+    targetCtx.moveTo(ex, ey);
+    targetCtx.lineTo(tx, ty);
+    targetCtx.stroke();
+  }
+
+  // fluffy neck mane/cheek ruff for long-haired breeds
+  if (breed.longFur) {
+    targetCtx.globalAlpha = 0.85;
+    targetCtx.beginPath();
+    targetCtx.ellipse(sx - r * 0.78, sy + r * 0.35, r * 0.38, r * 0.48, -0.3, 0, Math.PI * 2);
+    targetCtx.fillStyle = breed.bodyColor;
+    targetCtx.fill();
+    targetCtx.beginPath();
+    targetCtx.ellipse(sx + r * 0.78, sy + r * 0.35, r * 0.38, r * 0.48, 0.3, 0, Math.PI * 2);
+    targetCtx.fill();
+    targetCtx.globalAlpha = 1;
+  }
+
+  // coat pattern
+  if (breed.pattern === 'stripes') {
+    targetCtx.strokeStyle = breed.patternColor;
+    targetCtx.lineWidth = Math.max(1, r * 0.08);
+    for (const off of [-0.5, 0, 0.5]) {
+      targetCtx.beginPath();
+      targetCtx.moveTo(sx + off * r, sy - r * 0.95);
+      targetCtx.lineTo(sx + off * r * 1.3, sy - r * 0.55);
+      targetCtx.stroke();
+    }
+  } else if (breed.pattern === 'spots') {
+    const spots = [
+      { dx: -0.35, dy: -0.2, s: 0.15 }, { dx: 0.32, dy: -0.28, s: 0.12 },
+      { dx: -0.15, dy: 0.2, s: 0.11 },  { dx: 0.38, dy: 0.1, s: 0.14 },
+      { dx: 0.02, dy: 0.4, s: 0.12 }
+    ];
+    targetCtx.fillStyle = breed.patternColor;
+    for (const sp of spots) {
+      targetCtx.beginPath();
+      targetCtx.arc(sx + sp.dx * r, sy + sp.dy * r, sp.s * r, 0, Math.PI * 2);
+      targetCtx.fill();
+    }
+  } else if (breed.pattern === 'patches') {
+    const patches = [
+      { dx: -0.4, dy: -0.3, s: 0.32, c: 0 }, { dx: 0.35, dy: -0.15, s: 0.28, c: 1 },
+      { dx: -0.1, dy: 0.4, s: 0.26, c: 0 },  { dx: 0.4, dy: 0.35, s: 0.22, c: 1 }
+    ];
+    for (const p of patches) {
+      targetCtx.beginPath();
+      targetCtx.ellipse(sx + p.dx * r, sy + p.dy * r, p.s * r, p.s * r * 0.8, 0.4, 0, Math.PI * 2);
+      targetCtx.fillStyle = breed.patternColor[p.c];
+      targetCtx.fill();
+    }
+  }
+
+  // wrinkles (Sphynx)
+  if (breed.wrinkles) {
+    targetCtx.strokeStyle = 'rgba(0,0,0,0.15)';
+    targetCtx.lineWidth = Math.max(1, r * 0.04);
+    for (const yOff of [-0.55, -0.42]) {
+      targetCtx.beginPath();
+      targetCtx.moveTo(sx - r * 0.35, sy + r * yOff);
+      targetCtx.quadraticCurveTo(sx, sy + r * (yOff - 0.08), sx + r * 0.35, sy + r * yOff);
+      targetCtx.stroke();
+    }
+  }
+
+  // chest patch (Black Cat)
+  if (breed.chestPatch) {
+    targetCtx.beginPath();
+    targetCtx.ellipse(sx, sy + r * 0.45, r * 0.22, r * 0.28, 0, 0, Math.PI * 2);
+    targetCtx.fillStyle = '#f5f0e6';
+    targetCtx.fill();
+  }
+
+  // eyes
+  const eyeOffsetX = r * 0.32;
+  const eyeOffsetY = -r * 0.05;
+  const eyeR = Math.max(1.5, r * 0.14);
+  for (const dir of [-1, 1]) {
+    targetCtx.beginPath();
+    targetCtx.ellipse(sx + dir * eyeOffsetX, sy + eyeOffsetY, eyeR, eyeR * 1.2, 0, 0, Math.PI * 2);
+    targetCtx.fillStyle = breed.eyeColor;
+    targetCtx.fill();
+    // eye shine
+    targetCtx.beginPath();
+    targetCtx.arc(sx + dir * eyeOffsetX + eyeR * 0.3, sy + eyeOffsetY - eyeR * 0.3, eyeR * 0.35, 0, Math.PI * 2);
+    targetCtx.fillStyle = '#fff';
+    targetCtx.fill();
+  }
+
+  // nose
+  targetCtx.beginPath();
+  targetCtx.moveTo(sx - r * 0.06, sy + r * 0.18);
+  targetCtx.lineTo(sx + r * 0.06, sy + r * 0.18);
+  targetCtx.lineTo(sx, sy + r * 0.28);
+  targetCtx.closePath();
+  targetCtx.fillStyle = '#ff8fa3';
+  targetCtx.fill();
+
+  // mouth
+  targetCtx.beginPath();
+  targetCtx.moveTo(sx, sy + r * 0.28);
+  targetCtx.quadraticCurveTo(sx - r * 0.15, sy + r * 0.4, sx - r * 0.28, sy + r * 0.32);
+  targetCtx.moveTo(sx, sy + r * 0.28);
+  targetCtx.quadraticCurveTo(sx + r * 0.15, sy + r * 0.4, sx + r * 0.28, sy + r * 0.32);
+  targetCtx.strokeStyle = 'rgba(0,0,0,0.4)';
+  targetCtx.lineWidth = Math.max(1, r * 0.05);
+  targetCtx.stroke();
+
+  // whiskers
+  targetCtx.strokeStyle = 'rgba(255,255,255,0.7)';
+  targetCtx.lineWidth = Math.max(0.8, r * 0.03);
+  for (const dir of [-1, 1]) {
+    for (const yOff of [-0.02, 0.08, 0.18]) {
+      targetCtx.beginPath();
+      targetCtx.moveTo(sx + dir * r * 0.25, sy + r * (0.15 + yOff * 0.5));
+      targetCtx.lineTo(sx + dir * r * 0.95, sy + r * yOff);
+      targetCtx.stroke();
+    }
+  }
+
+  // name label
+  if (name) {
+    targetCtx.font = `${Math.max(11, r * 0.35)}px Segoe UI`;
+    targetCtx.fillStyle = '#fff';
+    targetCtx.textAlign = 'center';
+    targetCtx.fillText(name, sx, sy - r - 12);
+  }
+}
+
+function drawCat(cat, camX, camY, zoom) {
+  const sx = (cat.x - camX) * zoom + canvas.width / 2;
+  const sy = (cat.y - camY) * zoom + canvas.height / 2;
+  const r = cat.radius * zoom;
+  drawCatShape(ctx, sx, sy, r, cat.breed, { isPlayer: cat.isPlayer, moveDirX: cat.moveDirX, name: cat.name, frenzy: cat.frenzyTimer > 0 });
+}
+
+function drawMouse(camX, camY, zoom) {
+  if (!mouse) return;
+  const sx = (mouse.x - camX) * zoom + canvas.width / 2;
+  const sy = (mouse.y - camY) * zoom + canvas.height / 2;
+  ctx.font = `${mouse.radius * 2.4 * zoom}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🐭', sx, sy);
+}
+
+function drawFood(f, camX, camY, zoom) {
+  const sx = (f.x - camX) * zoom + canvas.width / 2;
+  const sy = (f.y - camY) * zoom + canvas.height / 2;
+  const size = f.radius * 2 * zoom;
+  ctx.font = `${size}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(f.emoji, sx, sy);
+}
+
+function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const zoom = getCameraZoom();
+  const camX = player.x;
+  const camY = player.y;
+
+  const left = (0 - camX) * zoom + canvas.width / 2;
+  const top = (0 - camY) * zoom + canvas.height / 2;
+  const worldPx = WORLD_SIZE * zoom;
+
+  // patio backdrop beyond the fenced yard
+  ctx.fillStyle = '#cbb994';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // grass with mowed-lawn stripes, clipped to the yard bounds
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(left, top, worldPx, worldPx);
+  ctx.clip();
+  ctx.fillStyle = '#6ab04c';
+  ctx.fillRect(left, top, worldPx, worldPx);
+  ctx.fillStyle = 'rgba(0,0,0,0.06)';
+  const stripeWidth = 180;
+  for (let wx = 0; wx < WORLD_SIZE; wx += stripeWidth * 2) {
+    const sx = (wx - camX) * zoom + canvas.width / 2;
+    ctx.fillRect(sx, top, stripeWidth * zoom, worldPx);
+  }
+  ctx.restore();
+
+  // scattered yard decorations (purely visual, no collision)
+  for (const d of yardDecor) {
+    const sx = (d.x - camX) * zoom + canvas.width / 2;
+    const sy = (d.y - camY) * zoom + canvas.height / 2;
+    ctx.font = `${d.size * zoom}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(d.emoji, sx, sy);
+  }
+
+  // wooden fence border around the yard
+  ctx.lineWidth = Math.max(2, 8 * zoom);
+  ctx.strokeStyle = '#8b5a2b';
+  ctx.strokeRect(left, top, worldPx, worldPx);
+  ctx.fillStyle = '#6b4423';
+  const postSpacing = 200;
+  for (let wx = 0; wx <= WORLD_SIZE; wx += postSpacing) {
+    const sx = (wx - camX) * zoom + canvas.width / 2;
+    ctx.fillRect(sx - 3 * zoom, top - 10 * zoom, 6 * zoom, 20 * zoom);
+    ctx.fillRect(sx - 3 * zoom, top + worldPx - 10 * zoom, 6 * zoom, 20 * zoom);
+  }
+  for (let wy = 0; wy <= WORLD_SIZE; wy += postSpacing) {
+    const sy = (wy - camY) * zoom + canvas.height / 2;
+    ctx.fillRect(left - 10 * zoom, sy - 3 * zoom, 20 * zoom, 6 * zoom);
+    ctx.fillRect(left + worldPx - 10 * zoom, sy - 3 * zoom, 20 * zoom, 6 * zoom);
+  }
+
+  for (const f of food) drawFood(f, camX, camY, zoom);
+  drawMouse(camX, camY, zoom);
+  for (const cat of cats) drawCat(cat, camX, camY, zoom);
+}
+
+// ---- UI ----
+function updateLeaderboard() {
+  const sorted = [...cats].sort((a, b) => b.radius - a.radius).slice(0, 8);
+  const list = document.getElementById('leaderboardList');
+  list.innerHTML = '';
+  for (const cat of sorted) {
+    const li = document.createElement('li');
+    li.textContent = `${cat.name} — ${Math.round(cat.radius)}`;
+    if (cat.isPlayer) li.classList.add('player');
+    list.appendChild(li);
+  }
+  document.getElementById('score').textContent = `Score: ${player.score}`;
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timeLeft / 60);
+  const s = Math.floor(timeLeft % 60);
+  document.getElementById('timer').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+const BADGE_DEFS = [
+  { id: 'saladDodger', label: '🥗 Salad Dodger', check: c => c.saladCount === 0 && c.foodEatenCount > 0 },
+  { id: 'steakHunter', label: '🥩 Steak Hunter', check: c => c.jackpotCount >= 1 },
+  { id: 'mouseCatcher', label: '🐭 Mouse Catcher', check: c => c.mouseCaughtCount >= 1 },
+  { id: 'frenzyMaster', label: '🌿 Frenzy Master', check: c => c.catnipCount >= 1 },
+  { id: 'glutton', label: '😋 Glutton', check: c => c.foodEatenCount >= 50 },
+  { id: 'apexPredator', label: '😼 Apex Predator', check: c => c.absorbCount >= 3 },
+  { id: 'untouchable', label: '🎯 Untouchable', check: c => c.timesAbsorbed === 0 }
+];
+
+function endRound() {
+  gameRunning = false;
+  stopChiptuneMusic();
+  const champion = [...cats].sort((a, b) => b.radius - a.radius)[0];
+  document.getElementById('championName').textContent = `🏆 ${champion.name} Wins!`;
+  document.getElementById('championSize').textContent = `Highest size achieved: ${Math.round(peakSizeOverall)} (${peakSizeName})`;
+  document.getElementById('finalScore').textContent = `Your Score: ${player.score}`;
+
+  const badgeList = document.getElementById('badgeList');
+  badgeList.innerHTML = '';
+  const earned = BADGE_DEFS.filter(b => b.check(player));
+  if (earned.length === 0) {
+    const p = document.createElement('p');
+    p.style.fontSize = '13px';
+    p.style.color = '#999';
+    p.textContent = 'No badges this round — give it another shot!';
+    badgeList.appendChild(p);
+  } else {
+    for (const b of earned) {
+      const chip = document.createElement('span');
+      chip.className = 'badgeChip';
+      chip.textContent = b.label;
+      badgeList.appendChild(chip);
+    }
+  }
+
+  document.getElementById('gameOverScreen').style.display = 'flex';
+}
+
+// ---- MAIN LOOP ----
+function gameLoop(now) {
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
+
+  if (gameRunning) {
+    updatePlayer(dt);
+    for (const cat of cats) {
+      if (!cat.isPlayer) updateAI(cat, dt);
+    }
+    handleFoodCollisions();
+    handleCatCollisions();
+    updateMouse(dt);
+    render();
+    updateLeaderboard();
+
+    timeLeft -= dt;
+    if (timeLeft <= 0) {
+      timeLeft = 0;
+      updateTimerDisplay();
+      endRound();
+      return;
+    }
+    updateTimerDisplay();
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+// ---- BREED SELECTOR ----
+let selectedBreed = BREEDS[0];
+
+function buildBreedGrid() {
+  const grid = document.getElementById('breedGrid');
+  BREEDS.forEach(breed => {
+    const card = document.createElement('div');
+    card.className = 'breedCard' + (breed.id === selectedBreed.id ? ' selected' : '');
+
+    const previewCanvas = document.createElement('canvas');
+    previewCanvas.width = 70;
+    previewCanvas.height = 70;
+    const pctx = previewCanvas.getContext('2d');
+    drawCatShape(pctx, 35, 42, 24, breed, { isPlayer: false, moveDirX: 0, name: null });
+
+    const label = document.createElement('div');
+    label.className = 'breedLabel';
+    label.textContent = breed.name;
+
+    card.appendChild(previewCanvas);
+    card.appendChild(label);
+    card.addEventListener('click', () => {
+      selectedBreed = breed;
+      document.querySelectorAll('.breedCard').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      ensureAudioContext();
+      playMeowSound();
+    });
+    grid.appendChild(card);
+  });
+}
+buildBreedGrid();
+
+// Game now starts via the start screen's "Start Game" button (see event listener above)
+</script>
+
+</body>
+</html>
